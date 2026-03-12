@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.env.*
+storage/
+data/
+app/db/migrations/__pycache__/
+*.log

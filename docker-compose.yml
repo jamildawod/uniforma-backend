@@ -1,0 +1,57 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: uniforma-api
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:9100:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./storage:/opt/uniforma/storage
+      - ./data:/opt/uniforma/data:ro
+    networks:
+      uniforma-net:
+        aliases:
+          - uniforma-api
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:8000/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  db:
+    image: postgres:15
+    container_name: uniforma-db
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - uniforma_pgdata:/var/lib/postgresql/data
+    networks:
+      uniforma-net:
+        aliases:
+          - uniforma-db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+networks:
+  uniforma-net:
+    name: uniforma-net
+    driver: bridge
+
+volumes:
+  uniforma_pgdata:
+    name: uniforma_pgdata
