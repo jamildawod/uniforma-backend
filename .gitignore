@@ -9,3 +9,6 @@ storage/
 data/
 app/db/migrations/__pycache__/
 *.log
+admin-ui/node_modules/
+admin-ui/.next/
+admin-ui/.next.stale-*/
