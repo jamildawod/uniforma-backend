@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-sand text-ink antialiased;
+  background-image:
+    radial-gradient(circle at top left, rgba(199, 107, 71, 0.18), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(91, 107, 74, 0.12), transparent 34%);
+  min-height: 100vh;
+}
+
+a {
+  @apply text-clay transition-colors hover:text-ink;
+}

@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from fastapi import FastAPI
+from pydantic import ValidationError
 
 from app.api.router import router as api_router
 from app.core.config import get_settings
@@ -17,6 +18,7 @@ from app.services.pim_sync_service import PimSyncService
 from app.services.user_service import UserService
 
 configure_logging()
+logger = get_logger(__name__)
 
 
 async def _bootstrap_default_admin() -> None:
@@ -25,14 +27,26 @@ async def _bootstrap_default_admin() -> None:
     async with session_factory() as session:
         service = UserService(UserRepository(session))
         if await service.get_by_email(settings.default_admin_email) is None:
-            user = await service.create_user(
-                UserCreate(
-                    email=settings.default_admin_email,
-                    password=settings.default_admin_password,
-                    full_name="Uniforma Admin",
-                ),
-                is_superuser=True,
-            )
+            try:
+                user = await service.create_user(
+                    UserCreate(
+                        email=settings.default_admin_email,
+                        password=settings.default_admin_password,
+                        full_name="Uniforma Admin",
+                    ),
+                    is_superuser=True,
+                )
+            except ValidationError as exc:
+                logger.error(
+                    "Default admin bootstrap configuration is invalid.",
+                    extra={
+                        "event": "default_admin_bootstrap_invalid",
+                        "error": str(exc),
+                    },
+                )
+                await session.rollback()
+                return
+
             await session.commit()
             await session.refresh(user)
 

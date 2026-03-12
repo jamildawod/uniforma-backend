@@ -8,6 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_name: str = "Uniforma Backend"
+    project_slug: str = "uniforma"
     app_env: Literal["development", "staging", "production"] = "development"
     app_debug: bool = False
     api_v1_prefix: str = "/api/v1"
@@ -26,7 +27,7 @@ class Settings(BaseSettings):
     jwt_secret_key: str = Field(..., min_length=32)
     jwt_refresh_secret_key: str = Field(..., min_length=32)
 
-    default_admin_email: str = "admin@uniforma.local"
+    default_admin_email: str = "admin@uniforma.app"
     default_admin_password: str = Field(..., min_length=12)
 
     pim_csv_path: Path = Path("/opt/uniforma/data/PIMexport_Hejco_sv-SE.csv")

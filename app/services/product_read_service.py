@@ -1,5 +1,8 @@
 import uuid
 
+from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError
+
 from app.core.logging import get_logger
 from app.models.admin_override import AdminOverride
 from app.models.product import Product
@@ -72,6 +75,13 @@ class ProductReadService:
             return None
 
         for field_name, override_value in payload.overrides.items():
+            if field_name not in ALLOWED_OVERRIDE_FIELDS:
+                self.logger.warning(
+                    "Rejected disallowed override field '%s' for product %s",
+                    field_name,
+                    product_id,
+                )
+                continue
             override = await self.admin_override_repository.get_by_product_and_field(product_id, field_name)
             if override is None:
                 override = AdminOverride(
@@ -105,7 +115,25 @@ class ProductReadService:
             is_primary=payload.is_primary,
             sort_order=payload.sort_order,
         )
-        await self.product_repository.add_image(image)
+        try:
+            await self.product_repository.add_image(image)
+        except IntegrityError as exc:
+            session = self.product_repository.session
+            await session.rollback()
+            self.logger.warning(
+                "Rejected duplicate product image for external_path '%s'",
+                payload.external_path,
+                extra={
+                    "event": "admin_product_image_integrity_error",
+                    "product_id": str(product_id),
+                    "external_path": payload.external_path,
+                    "error": str(exc),
+                },
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Image with this external_path already exists.",
+            ) from exc
         refreshed = await self.product_repository.get_product_by_id(product_id)
         override_map = await self.admin_override_repository.list_by_product_ids([product_id])
         return self._merge_admin_product(refreshed, override_map.get(product_id, []))

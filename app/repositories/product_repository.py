@@ -1,6 +1,7 @@
 import uuid
+from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -17,6 +18,7 @@ class ProductRepository:
     async def list_products(self, limit: int = 50, offset: int = 0) -> list[Product]:
         statement = (
             select(Product)
+            .where(Product.deleted_at.is_(None))
             .options(
                 selectinload(Product.category),
                 selectinload(Product.images),
@@ -32,7 +34,7 @@ class ProductRepository:
     async def list_active_products(self, limit: int = 50, offset: int = 0) -> list[Product]:
         statement = (
             select(Product)
-            .where(Product.is_active.is_(True))
+            .where(Product.is_active.is_(True), Product.deleted_at.is_(None))
             .options(
                 selectinload(Product.category),
                 selectinload(Product.images),
@@ -48,7 +50,7 @@ class ProductRepository:
     async def get_product_by_slug(self, slug: str) -> Product | None:
         statement = (
             select(Product)
-            .where(Product.slug == slug, Product.is_active.is_(True))
+            .where(Product.slug == slug, Product.is_active.is_(True), Product.deleted_at.is_(None))
             .options(
                 selectinload(Product.category),
                 selectinload(Product.images),
@@ -107,6 +109,34 @@ class ProductRepository:
         statement = select(ProductImage).where(ProductImage.external_path.is_not(None))
         result = await self.session.execute(statement)
         return list(result.scalars().all())
+
+    async def soft_delete_missing_products(self, seen_at: datetime, deleted_at: datetime) -> None:
+        statement = (
+            update(Product)
+            .where(
+                (Product.last_seen_at.is_(None)) | (Product.last_seen_at < seen_at),
+                Product.deleted_at.is_(None),
+            )
+            .values(
+                deleted_at=deleted_at,
+                is_active=False,
+            )
+        )
+        await self.session.execute(statement)
+
+    async def soft_delete_missing_variants(self, seen_at: datetime, deleted_at: datetime) -> None:
+        statement = (
+            update(ProductVariant)
+            .where(
+                (ProductVariant.last_seen_at.is_(None)) | (ProductVariant.last_seen_at < seen_at),
+                ProductVariant.deleted_at.is_(None),
+            )
+            .values(
+                deleted_at=deleted_at,
+                is_active=False,
+            )
+        )
+        await self.session.execute(statement)
 
     async def add_category(self, category: Category) -> Category:
         self.session.add(category)

@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String
+from sqlalchemy import Boolean, ForeignKey, Index, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -9,6 +9,9 @@ from app.db.base import Base
 
 class ProductImage(Base):
     __tablename__ = "product_images"
+    __table_args__ = (
+        Index("ix_product_images_product_id", "product_id"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     product_id: Mapped[uuid.UUID] = mapped_column(

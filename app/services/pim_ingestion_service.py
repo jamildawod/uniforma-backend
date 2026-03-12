@@ -2,6 +2,7 @@ import csv
 import hashlib
 import json
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
@@ -65,12 +66,13 @@ class PimIngestionService:
         grouped = self._read_and_group(csv_path)
         response = PimSyncResponse()
         external_ids = list(grouped.keys())
+        run_seen_at = datetime.now(UTC)
 
         try:
             for start in range(0, len(external_ids), self.settings.pim_batch_size):
                 batch_ids = external_ids[start : start + self.settings.pim_batch_size]
                 batch_payloads = [grouped[external_id] for external_id in batch_ids]
-                batch_result = await self._process_batch(batch_payloads)
+                batch_result = await self._process_batch(batch_payloads, run_seen_at)
                 response.products_created += batch_result.products_created
                 response.products_updated += batch_result.products_updated
                 response.products_unchanged += batch_result.products_unchanged
@@ -79,6 +81,11 @@ class PimIngestionService:
                 response.variants_unchanged += batch_result.variants_unchanged
                 response.images_discovered += batch_result.images_discovered
                 await self.session.commit()
+
+            deleted_at = datetime.now(UTC)
+            await self.product_repository.soft_delete_missing_variants(run_seen_at, deleted_at)
+            await self.product_repository.soft_delete_missing_products(run_seen_at, deleted_at)
+            await self.session.commit()
         except IntegrityError as exc:
             await self.session.rollback()
             self.logger.error(
@@ -192,14 +199,20 @@ class PimIngestionService:
 
     def _normalize_for_hash(self, value: Any) -> Any:
         if isinstance(value, Decimal):
-            return str(value)
+            return format(value, "f")
         if isinstance(value, dict):
             return {key: self._normalize_for_hash(item) for key, item in value.items()}
         if isinstance(value, list):
             return [self._normalize_for_hash(item) for item in value]
+        if value is None:
+            return None
         return value
 
-    async def _process_batch(self, payloads: list[ProductPayload]) -> PimSyncResponse:
+    async def _process_batch(
+        self,
+        payloads: list[ProductPayload],
+        run_seen_at: datetime,
+    ) -> PimSyncResponse:
         result = PimSyncResponse()
         existing_products = await self.product_repository.get_by_external_ids(
             [payload.external_id for payload in payloads]
@@ -207,6 +220,9 @@ class PimIngestionService:
         existing_variants = await self.product_repository.get_by_skus(
             [variant.sku for payload in payloads for variant in payload.variants]
         )
+        category_names = [payload.category_name for payload in payloads if payload.category_name]
+        category_slugs = [slugify(name) for name in category_names]
+        categories = await self.product_repository.get_categories_by_slugs(category_slugs)
         existing_images = await self.product_repository.get_images_by_external_paths(
             [
                 image_path
@@ -233,7 +249,7 @@ class PimIngestionService:
             if product is None or product.source_hash != product_hash:
                 if payload.category_name:
                     category_slug = slugify(payload.category_name)
-                    category = await self._resolve_category(category_slug, payload.category_name)
+                    category = await self._resolve_category(categories, category_slug, payload.category_name)
 
             if product is None:
                 product = Product(
@@ -245,12 +261,16 @@ class PimIngestionService:
                     brand=payload.brand,
                     category_id=category.id if category else None,
                     is_active=payload.is_active,
+                    last_seen_at=run_seen_at,
+                    deleted_at=None,
                 )
                 await self.product_repository.add_product(product)
                 await self.session.flush()
                 existing_products[payload.external_id] = product
                 result.products_created += 1
             elif product.source_hash == product_hash:
+                product.last_seen_at = run_seen_at
+                product.deleted_at = None
                 result.products_unchanged += 1
             else:
                 changed = self._update_if_changed(
@@ -262,6 +282,8 @@ class PimIngestionService:
                         "brand": payload.brand,
                         "category_id": category.id if category else None,
                         "is_active": payload.is_active,
+                        "last_seen_at": run_seen_at,
+                        "deleted_at": None,
                         "source_hash": product_hash,
                     },
                 )
@@ -296,12 +318,16 @@ class PimIngestionService:
                         currency=variant_payload.currency,
                         stock_quantity=variant_payload.stock_quantity,
                         is_active=variant_payload.is_active,
+                        last_seen_at=run_seen_at,
+                        deleted_at=None,
                     )
                     await self.product_repository.add_variant(variant)
                     await self.session.flush()
                     existing_variants[variant_payload.sku] = variant
                     result.variants_created += 1
                 elif variant.source_hash == variant_hash:
+                    variant.last_seen_at = run_seen_at
+                    variant.deleted_at = None
                     result.variants_unchanged += 1
                 else:
                     changed = self._update_if_changed(
@@ -315,6 +341,8 @@ class PimIngestionService:
                             "currency": variant_payload.currency,
                             "stock_quantity": variant_payload.stock_quantity,
                             "is_active": variant_payload.is_active,
+                            "last_seen_at": run_seen_at,
+                            "deleted_at": None,
                             "source_hash": variant_hash,
                         },
                     )
@@ -340,12 +368,18 @@ class PimIngestionService:
 
         return result
 
-    async def _resolve_category(self, category_slug: str, category_name: str) -> Category:
-        categories = await self.product_repository.get_categories_by_slugs([category_slug])
+    async def _resolve_category(
+        self,
+        categories: dict[str, Category],
+        category_slug: str,
+        category_name: str,
+    ) -> Category:
         category = categories.get(category_slug)
         if category is None:
             category = Category(name=category_name, slug=category_slug)
             await self.product_repository.add_category(category)
+            await self.session.flush()
+            categories[category_slug] = category
         return category
 
     def _update_if_changed(self, model: object, values: dict[str, object]) -> bool:
