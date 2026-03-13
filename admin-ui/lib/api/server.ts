@@ -1,10 +1,19 @@
 import { cookies } from "next/headers";
 
-import { env } from "@/lib/config/env";
 import { AUTH_COOKIE } from "@/lib/auth/cookies";
-import type { AdminProduct, ProductListFilters, PublicProduct } from "@/lib/types/products";
-import type { QuoteRequest } from "@/lib/types/quotes";
+import { env } from "@/lib/config/env";
 import type { SyncRun } from "@/lib/types/sync";
+import type {
+  AdminProduct,
+  AttributeDefinition,
+  Brand,
+  Category,
+  DataQualityPayload,
+  MediaItem,
+  ProductListFilters,
+  PublicProduct
+} from "@/lib/types/products";
+import type { QuoteRequest } from "@/lib/types/quotes";
 import type { SystemHealth } from "@/types/intelligence";
 
 export async function fetchAdminProducts(filters: ProductListFilters): Promise<AdminProduct[]> {
@@ -23,9 +32,33 @@ export async function fetchAdminProduct(id: string): Promise<AdminProduct | null
   }
 }
 
-export async function fetchSyncRuns(): Promise<SyncRun[]> {
+export async function fetchAdminBrands(): Promise<Brand[]> {
   try {
-    return await fetchWithToken<SyncRun[]>("/api/v1/admin/sync/runs");
+    return await fetchWithToken<Brand[]>("/api/v1/admin/brands");
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchAdminCategories(): Promise<Category[]> {
+  try {
+    return await fetchWithToken<Category[]>("/api/v1/admin/categories");
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchAdminAttributes(): Promise<AttributeDefinition[]> {
+  try {
+    return await fetchWithToken<AttributeDefinition[]>("/api/v1/admin/attributes");
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchAdminMedia(): Promise<MediaItem[]> {
+  try {
+    return await fetchWithToken<MediaItem[]>("/api/v1/admin/media");
   } catch {
     return [];
   }
@@ -34,6 +67,22 @@ export async function fetchSyncRuns(): Promise<SyncRun[]> {
 export async function fetchAdminQuotes(): Promise<QuoteRequest[]> {
   try {
     return await fetchWithToken<QuoteRequest[]>("/api/v1/admin/quotes");
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchAdminDataQuality(): Promise<DataQualityPayload | null> {
+  try {
+    return await fetchWithToken<DataQualityPayload>("/api/v1/admin/data-quality");
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchSyncRuns(): Promise<SyncRun[]> {
+  try {
+    return await fetchWithToken<SyncRun[]>("/api/v1/admin/sync/runs");
   } catch {
     return [];
   }

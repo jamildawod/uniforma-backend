@@ -98,7 +98,7 @@ export default async function HomePage() {
                   )}
                 </div>
                 <div className="mt-4">
-                  <p className="text-xs uppercase tracking-[0.16em] text-slate-300">{product.brand || "Uniforma"}</p>
+                  <p className="text-xs uppercase tracking-[0.16em] text-slate-300">{product.brand?.name || "Uniforma"}</p>
                   <h3 className="mt-2 text-xl font-semibold text-white">{product.name}</h3>
                 </div>
               </Link>

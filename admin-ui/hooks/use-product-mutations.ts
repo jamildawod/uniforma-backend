@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createAdminProduct,
   createProductImage,
+  createProductVariant,
   deleteAdminProduct,
   patchProductOverride,
   publishAdminProduct,
@@ -16,7 +17,8 @@ import type {
   AdminImagePayload,
   AdminOverridePayload,
   AdminProduct,
-  AdminProductUpsertPayload
+  AdminProductUpsertPayload,
+  AdminVariantPayload
 } from "@/lib/types/products";
 
 export function usePatchProductOverride(productId: string) {
@@ -56,6 +58,18 @@ export function useCreateProductImage(productId: string) {
 
   return useMutation({
     mutationFn: (payload: AdminImagePayload) => createProductImage(productId, payload),
+    onSuccess: (next) => {
+      queryClient.setQueryData(["admin-product", productId], next);
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    }
+  });
+}
+
+export function useCreateProductVariant(productId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: AdminVariantPayload) => createProductVariant(productId, payload),
     onSuccess: (next) => {
       queryClient.setQueryData(["admin-product", productId], next);
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });

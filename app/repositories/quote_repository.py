@@ -1,5 +1,6 @@
 from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models.quote_request import QuoteRequest
 
@@ -16,6 +17,10 @@ class QuoteRepository:
     async def list_quotes(self, limit: int = 50, offset: int = 0) -> list[QuoteRequest]:
         statement = (
             select(QuoteRequest)
+            .options(
+                selectinload(QuoteRequest.product),
+                selectinload(QuoteRequest.variant),
+            )
             .order_by(desc(QuoteRequest.created_at))
             .limit(limit)
             .offset(offset)

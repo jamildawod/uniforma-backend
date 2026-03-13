@@ -22,6 +22,9 @@ export function AdminShell({
           <nav className="flex flex-wrap gap-4 text-sm">
             <Link href="/admin">Dashboard</Link>
             <Link href="/admin/products">Products</Link>
+            <Link href="/admin/brands">Brands</Link>
+            <Link href="/admin/categories">Categories</Link>
+            <Link href="/admin/media">Media</Link>
             <Link href="/admin/quotes">Quotes</Link>
             <Link href="/admin/intelligence">Intelligence</Link>
             <Link href="/admin/sync">Sync</Link>

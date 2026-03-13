@@ -1,4 +1,6 @@
 export interface QuoteRequestPayload {
+  product_id?: string | null;
+  variant_id?: number | null;
   name: string;
   email: string;
   company?: string | null;
@@ -7,6 +9,8 @@ export interface QuoteRequestPayload {
 
 export interface QuoteRequest {
   id: number;
+  product_id: string | null;
+  variant_id: number | null;
   name: string;
   email: string;
   company: string | null;

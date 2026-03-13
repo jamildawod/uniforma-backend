@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -14,6 +14,7 @@ class Category(Base):
         ForeignKey("categories.id", ondelete="SET NULL"),
         nullable=True,
     )
+    position: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
 
     parent: Mapped["Category | None"] = relationship(
         remote_side="Category.id",

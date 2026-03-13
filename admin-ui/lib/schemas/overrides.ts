@@ -9,11 +9,10 @@ export const overrideFieldsSchema = z.object({
 export type OverrideFieldsInput = z.infer<typeof overrideFieldsSchema>;
 
 export const imageSchema = z.object({
-  external_path: z.string().min(1).max(1024),
-  local_path: z.string().max(1024).optional().nullable(),
+  url: z.string().min(1).max(1024),
   variant_id: z.coerce.number().int().optional().nullable(),
   is_primary: z.boolean().default(false),
-  sort_order: z.coerce.number().int().min(0).default(0)
+  position: z.coerce.number().int().min(0).default(0)
 });
 
 export type ImageInput = z.infer<typeof imageSchema>;

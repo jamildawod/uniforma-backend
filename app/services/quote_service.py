@@ -9,6 +9,8 @@ class QuoteService:
 
     async def create_quote(self, payload: QuoteRequestCreate) -> QuoteRequestRead:
         quote_request = QuoteRequest(
+            product_id=payload.product_id,
+            variant_id=payload.variant_id,
             name=payload.name,
             email=str(payload.email),
             company=payload.company,

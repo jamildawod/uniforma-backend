@@ -7,14 +7,19 @@ import { OverrideEditor } from "@/components/admin/override-editor";
 import { VariantList } from "@/components/admin/variant-list";
 import { Badge } from "@/components/ui/badge";
 import { Panel } from "@/components/ui/panel";
-import { fetchAdminProduct } from "@/lib/api/server";
+import { fetchAdminAttributes, fetchAdminBrands, fetchAdminCategories, fetchAdminProduct } from "@/lib/api/server";
 
 export default async function AdminProductDetailPage({
   params
 }: {
   params: { id: string };
 }) {
-  const product = await fetchAdminProduct(params.id);
+  const [product, brands, categories, attributes] = await Promise.all([
+    fetchAdminProduct(params.id),
+    fetchAdminBrands(),
+    fetchAdminCategories(),
+    fetchAdminAttributes()
+  ]);
   if (!product) {
     notFound();
   }
@@ -35,7 +40,7 @@ export default async function AdminProductDetailPage({
           </div>
         </div>
         <div className="mt-6 grid gap-3 text-sm text-slate-600 md:grid-cols-3">
-          <p>Brand: {product.brand ?? "N/A"}</p>
+          <p>Brand: {product.brand?.name ?? "N/A"}</p>
           <p>Category: {product.category?.name ?? "Unassigned"}</p>
           <p>Last seen: {product.last_seen_at ? new Date(product.last_seen_at).toLocaleString() : "Unknown"}</p>
         </div>
@@ -45,15 +50,16 @@ export default async function AdminProductDetailPage({
         <Panel>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-steel">Product Management</p>
           <div className="mt-4">
-            <ProductEditor mode="edit" product={product} />
+            <ProductEditor attributes={attributes} brands={brands} categories={categories} mode="edit" product={product} />
           </div>
         </Panel>
         <Panel>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-steel">PIM Source</p>
           <div className="mt-4 grid gap-3 text-sm text-slate-700">
-            <p><span className="font-medium">Name:</span> {product.source_product?.name ?? product.name}</p>
-            <p><span className="font-medium">Brand:</span> {product.source_product?.brand ?? product.brand ?? "N/A"}</p>
-            <p><span className="font-medium">Description:</span> {product.source_product?.description ?? product.description ?? "N/A"}</p>
+            <p><span className="font-medium">Name:</span> {product.name}</p>
+            <p><span className="font-medium">Brand:</span> {product.brand?.name ?? "N/A"}</p>
+            <p><span className="font-medium">Description:</span> {product.description ?? "N/A"}</p>
+            <p><span className="font-medium">Status:</span> {product.status}</p>
           </div>
         </Panel>
       </div>

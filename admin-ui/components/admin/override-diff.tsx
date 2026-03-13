@@ -1,15 +1,14 @@
 import { Panel } from "@/components/ui/panel";
 import type { AdminProduct } from "@/lib/types/products";
 
-const OVERRIDE_FIELDS = ["name", "description", "brand"] as const;
+const OVERRIDE_FIELDS = ["name", "description"] as const;
 
 export function OverrideDiff({ product }: { product: AdminProduct }) {
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       {OVERRIDE_FIELDS.map((field) => {
         const sourceValue =
-          product.source_product?.[field] ??
-          (field === "name" ? product.name : field === "description" ? product.description : product.brand) ??
+          (field === "name" ? product.name : product.description) ??
           null;
         const overrideValue = product.applied_overrides[field] ?? null;
         const finalValue = overrideValue ?? sourceValue;

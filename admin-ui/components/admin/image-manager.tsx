@@ -20,10 +20,9 @@ export function ImageManager({
   const form = useForm<ImageInput>({
     resolver: zodResolver(imageSchema),
     defaultValues: {
-      external_path: "",
-      local_path: "",
+      url: "",
       is_primary: false,
-      sort_order: 0
+      position: 0
     }
   });
 
@@ -32,8 +31,8 @@ export function ImageManager({
       <div className="grid gap-3 md:grid-cols-2">
         {images.map((image) => (
           <div key={image.id} className="rounded-2xl border border-slate-200 p-4">
-            <p className="truncate text-sm font-medium text-ink">{image.external_path}</p>
-            <p className="mt-1 text-xs text-slate-500">{image.local_path ?? "Not downloaded yet"}</p>
+            <p className="truncate text-sm font-medium text-ink">{image.url}</p>
+            <p className="mt-1 text-xs text-slate-500">Position {image.position}</p>
           </div>
         ))}
       </div>
@@ -50,10 +49,9 @@ export function ImageManager({
           }
         })}
       >
-        <input className="rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="External FTP/SFTP path" {...form.register("external_path")} />
-        <input className="rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Local path override (optional)" {...form.register("local_path")} />
+        <input className="rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Image URL or /uploads path" {...form.register("url")} />
         <input className="rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Variant ID (optional)" {...form.register("variant_id")} />
-        <input className="rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Sort order" type="number" {...form.register("sort_order")} />
+        <input className="rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Position" type="number" {...form.register("position")} />
         <label className="flex items-center gap-2 text-sm text-slate-600">
           <input type="checkbox" {...form.register("is_primary")} />
           Primary image

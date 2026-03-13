@@ -1,17 +1,23 @@
+import type { AuthTokens } from "@/lib/types/auth";
+import { apiEndpoints } from "@/lib/api/endpoints";
 import type {
   AdminImagePayload,
   AdminOverridePayload,
   AdminProduct,
   AdminProductPublishPayload,
   AdminProductUpsertPayload,
+  AdminVariantPayload,
+  AttributeDefinition,
+  Brand,
+  Category,
+  DataQualityPayload,
+  MediaItem,
   ProductListFilters,
   PublicProduct,
   UploadResponse
 } from "@/lib/types/products";
-import type { AuthTokens } from "@/lib/types/auth";
 import type { QuoteRequest, QuoteRequestPayload } from "@/lib/types/quotes";
 import type { PimSyncResponse, SyncRun } from "@/lib/types/sync";
-import { apiEndpoints } from "@/lib/api/endpoints";
 
 type RequestOptions = RequestInit & {
   query?: Record<string, string | number | undefined>;
@@ -82,7 +88,7 @@ export function logoutRequest(): Promise<void> {
 }
 
 export function patchProductOverride(productId: string, payload: AdminOverridePayload): Promise<AdminProduct> {
-  return apiFetch<AdminProduct>(toUniformaProxy(apiEndpoints.adminProduct(productId)), {
+  return apiFetch<AdminProduct>(toUniformaProxy(`/api/v1/admin/products/${productId}`), {
     method: "PATCH",
     body: JSON.stringify(payload)
   });
@@ -115,6 +121,13 @@ export function publishAdminProduct(productId: string, payload: AdminProductPubl
   });
 }
 
+export function createProductVariant(productId: string, payload: AdminVariantPayload): Promise<AdminProduct> {
+  return apiFetch<AdminProduct>(toUniformaProxy(apiEndpoints.adminProductVariant(productId)), {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
 export function createProductImage(productId: string, payload: AdminImagePayload): Promise<AdminProduct> {
   return apiFetch<AdminProduct>(toUniformaProxy(apiEndpoints.adminProductImage(productId)), {
     method: "POST",
@@ -131,16 +144,6 @@ export function uploadAdminImage(file: File): Promise<UploadResponse> {
   });
 }
 
-export function triggerPimSync(): Promise<PimSyncResponse> {
-  return apiFetch<PimSyncResponse>(toUniformaProxy(apiEndpoints.adminSyncTrigger), {
-    method: "POST"
-  });
-}
-
-export function getSyncRuns(): Promise<SyncRun[]> {
-  return apiFetch<SyncRun[]>(toUniformaProxy(apiEndpoints.adminSyncRuns));
-}
-
 export function getAdminProduct(productId: string): Promise<AdminProduct> {
   return apiFetch<AdminProduct>(toUniformaProxy(apiEndpoints.adminProduct(productId)));
 }
@@ -154,8 +157,64 @@ export function getAdminProducts(filters: ProductListFilters): Promise<AdminProd
   });
 }
 
+export function getAdminBrands(): Promise<Brand[]> {
+  return apiFetch<Brand[]>(toUniformaProxy(apiEndpoints.adminBrands));
+}
+
+export function createAdminBrand(payload: { name: string; slug?: string | null; logo_url?: string | null }): Promise<Brand> {
+  return apiFetch<Brand>(toUniformaProxy(apiEndpoints.adminBrands), {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function getAdminCategories(): Promise<Category[]> {
+  return apiFetch<Category[]>(toUniformaProxy(apiEndpoints.adminCategories));
+}
+
+export function createAdminCategory(payload: {
+  name: string;
+  slug?: string | null;
+  parent_id?: number | null;
+  position?: number;
+}): Promise<Category> {
+  return apiFetch<Category>(toUniformaProxy(apiEndpoints.adminCategories), {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function getAdminAttributes(): Promise<AttributeDefinition[]> {
+  return apiFetch<AttributeDefinition[]>(toUniformaProxy(apiEndpoints.adminAttributes));
+}
+
+export function createAdminAttribute(payload: { name: string; type: string }): Promise<AttributeDefinition> {
+  return apiFetch<AttributeDefinition>(toUniformaProxy(apiEndpoints.adminAttributes), {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function getAdminMedia(): Promise<MediaItem[]> {
+  return apiFetch<MediaItem[]>(toUniformaProxy(apiEndpoints.adminMedia));
+}
+
 export function getAdminQuotes(): Promise<QuoteRequest[]> {
   return apiFetch<QuoteRequest[]>(toUniformaProxy(apiEndpoints.adminQuotes));
+}
+
+export function getAdminDataQuality(): Promise<DataQualityPayload> {
+  return apiFetch<DataQualityPayload>(toUniformaProxy(apiEndpoints.adminDataQuality));
+}
+
+export function triggerPimSync(): Promise<PimSyncResponse> {
+  return apiFetch<PimSyncResponse>(toUniformaProxy(apiEndpoints.adminSyncTrigger), {
+    method: "POST"
+  });
+}
+
+export function getSyncRuns(): Promise<SyncRun[]> {
+  return apiFetch<SyncRun[]>(toUniformaProxy(apiEndpoints.adminSyncRuns));
 }
 
 export function getPublicProducts(): Promise<PublicProduct[]> {
@@ -164,6 +223,14 @@ export function getPublicProducts(): Promise<PublicProduct[]> {
 
 export function getPublicProduct(slug: string): Promise<PublicProduct> {
   return apiFetch<PublicProduct>(apiEndpoints.publicProduct(slug));
+}
+
+export function searchPublicProducts(query: string): Promise<{ items: PublicProduct[] }> {
+  return apiFetch<{ items: PublicProduct[] }>(apiEndpoints.publicProductSearch, {
+    query: {
+      q: query
+    }
+  });
 }
 
 export function createQuoteRequest(payload: QuoteRequestPayload): Promise<QuoteRequest> {

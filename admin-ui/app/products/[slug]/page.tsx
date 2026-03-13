@@ -25,11 +25,23 @@ export default async function ProductDetailPage({
             )}
           </div>
           <div className="rounded-[2rem] bg-white p-8 shadow-[0_18px_50px_rgba(16,35,63,0.08)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#f28b39]">{product.brand || "UNIFORMA"}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#f28b39]">{product.brand?.name || "UNIFORMA"}</p>
             <h1 className="mt-3 text-4xl font-semibold text-[#10233f]">{product.name}</h1>
             <p className="mt-5 text-base leading-8 text-slate-600">
               {product.description || "Kontakta oss sa tar vi fram forslag pa modell, tryck och leveransupplagg."}
             </p>
+            {product.variants.length > 0 ? (
+              <div className="mt-6 grid gap-3 md:grid-cols-2">
+                {product.variants.map((variant) => (
+                  <div key={variant.id} className="rounded-2xl border border-slate-200 p-4">
+                    <p className="font-medium text-[#10233f]">{variant.sku}</p>
+                    <p className="text-sm text-slate-500">
+                      {variant.color || "Standard"} / {variant.size || "One size"} / Lager {variant.stock_quantity}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
             <a className="mt-8 inline-flex rounded-full bg-[#f28b39] px-6 py-3 text-sm font-semibold text-white" href="#product-quote">
               Begär offert
             </a>
@@ -40,6 +52,8 @@ export default async function ProductDetailPage({
           <QuoteForm
             compact
             defaultMessage={`Hej, jag vill ha offert pa ${product.name}. Vi vill veta mer om priser, tryck och leverans.`}
+            productId={product.id}
+            variantId={product.variants[0]?.id}
             title={`Offert for ${product.name}`}
           />
         </div>

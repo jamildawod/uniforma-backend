@@ -8,12 +8,16 @@ type QuoteFormProps = {
   defaultMessage?: string;
   title?: string;
   compact?: boolean;
+  productId?: string;
+  variantId?: number;
 };
 
 export function QuoteForm({
   defaultMessage = "",
   title = "Begär offert",
-  compact = false
+  compact = false,
+  productId,
+  variantId
 }: QuoteFormProps) {
   const [form, setForm] = useState({
     name: "",
@@ -30,6 +34,8 @@ export function QuoteForm({
     setIsSubmitting(true);
     try {
       await createQuoteRequest({
+        product_id: productId ?? null,
+        variant_id: variantId ?? null,
         name: form.name,
         email: form.email,
         company: form.company || null,

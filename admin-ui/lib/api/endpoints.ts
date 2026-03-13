@@ -3,9 +3,15 @@ export const apiEndpoints = {
   adminProducts: "/api/v1/admin/products",
   adminProduct: (id: string) => `/api/v1/admin/products/${id}`,
   adminProductPublish: (id: string) => `/api/v1/admin/products/${id}/publish`,
-  adminProductImage: (id: string) => `/api/v1/admin/products/${id}/image`,
-  adminUpload: "/api/v1/admin/upload",
+  adminProductImage: (id: string) => `/api/v1/admin/products/${id}/images`,
+  adminProductVariant: (id: string) => `/api/v1/admin/products/${id}/variants`,
+  adminUpload: "/api/v1/admin/media/upload",
+  adminMedia: "/api/v1/admin/media",
+  adminBrands: "/api/v1/admin/brands",
+  adminCategories: "/api/v1/admin/categories",
+  adminAttributes: "/api/v1/admin/attributes",
   adminQuotes: "/api/v1/admin/quotes",
+  adminDataQuality: "/api/v1/admin/data-quality",
   adminIntelligenceSummary: "/api/v1/admin/intelligence/summary",
   adminIntelligenceDataQuality: "/api/v1/admin/intelligence/data-quality",
   adminIntelligenceSyncHealth: "/api/v1/admin/intelligence/sync-health",
@@ -14,5 +20,6 @@ export const apiEndpoints = {
   adminSyncRuns: "/api/v1/admin/sync/runs",
   quotes: "/api/v1/quotes",
   publicProducts: "/api/v1/products",
-  publicProduct: (slug: string) => `/api/v1/products/${slug}`
+  publicProduct: (slug: string) => `/api/v1/products/${slug}`,
+  publicProductSearch: "/api/v1/products/search"
 } as const;

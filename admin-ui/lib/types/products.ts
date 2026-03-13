@@ -1,17 +1,40 @@
+export type ProductStatus = "draft" | "active" | "archived";
+export type AttributeType = "text" | "number" | "select" | "boolean";
+
+export interface Brand {
+  id: number;
+  name: string;
+  slug: string;
+  logo_url: string | null;
+}
+
 export interface Category {
   id: number;
   name: string;
   slug: string;
   parent_id: number | null;
+  position: number;
+}
+
+export interface AttributeDefinition {
+  id: number;
+  name: string;
+  type: AttributeType;
+}
+
+export interface ProductAttributeValue {
+  attribute_id: number;
+  value: string;
+  attribute: AttributeDefinition;
 }
 
 export interface ProductImage {
   id: number;
   variant_id: number | null;
-  external_path: string;
-  local_path: string | null;
+  url: string;
+  position: number;
   is_primary: boolean;
-  sort_order: number;
+  created_at: string;
 }
 
 export interface ProductVariant {
@@ -21,20 +44,11 @@ export interface ProductVariant {
   color: string | null;
   size: string | null;
   price: string | null;
-  currency: string | null;
   stock_quantity: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
-  deleted_at?: string | null;
-  last_seen_at?: string | null;
   images: ProductImage[];
-}
-
-export interface SourceProductView {
-  name: string | null;
-  description: string | null;
-  brand: string | null;
 }
 
 export interface AdminProduct {
@@ -43,18 +57,21 @@ export interface AdminProduct {
   name: string;
   slug: string;
   description: string | null;
-  brand: string | null;
-  is_active: boolean;
+  status: ProductStatus;
+  brand_id: number | null;
+  brand: Brand | null;
+  category_id: number | null;
+  category: Category | null;
   image_url: string | null;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;
   last_seen_at?: string | null;
-  category: Category | null;
   images: ProductImage[];
   variants: ProductVariant[];
+  attributes: ProductAttributeValue[];
   applied_overrides: Record<string, string | number | boolean | null | Record<string, unknown> | unknown[]>;
-  source_product?: SourceProductView | null;
 }
 
 export interface PublicProduct {
@@ -63,14 +80,18 @@ export interface PublicProduct {
   name: string;
   slug: string;
   description: string | null;
-  brand: string | null;
-  is_active: boolean;
+  status: ProductStatus;
+  brand_id: number | null;
+  brand: Brand | null;
+  category_id: number | null;
+  category: Category | null;
   image_url: string | null;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
-  category: Category | null;
   images: ProductImage[];
   variants: ProductVariant[];
+  attributes: ProductAttributeValue[];
 }
 
 export interface ProductListFilters {
@@ -84,11 +105,25 @@ export interface ProductListFilters {
 }
 
 export interface AdminImagePayload {
-  external_path: string;
-  local_path?: string | null;
+  url: string;
   variant_id?: number | null;
   is_primary?: boolean;
-  sort_order?: number;
+  position?: number;
+}
+
+export interface AdminVariantPayload {
+  sku: string;
+  ean?: string | null;
+  size?: string | null;
+  color?: string | null;
+  price?: string | null;
+  stock_quantity: number;
+  is_active: boolean;
+}
+
+export interface AdminAttributeValuePayload {
+  attribute_id: number;
+  value: string;
 }
 
 export interface AdminOverridePayload {
@@ -99,10 +134,13 @@ export interface AdminProductUpsertPayload {
   name: string;
   slug?: string | null;
   description?: string | null;
-  brand?: string | null;
-  category?: string | null;
+  brand_id?: number | null;
+  category_id?: number | null;
+  status: ProductStatus;
   image_url?: string | null;
   is_active: boolean;
+  variants?: AdminVariantPayload[];
+  attributes: AdminAttributeValuePayload[];
 }
 
 export interface AdminProductPublishPayload {
@@ -112,4 +150,19 @@ export interface AdminProductPublishPayload {
 export interface UploadResponse {
   filename: string;
   url: string;
+}
+
+export interface MediaItem {
+  filename: string;
+  url: string;
+}
+
+export interface DataQualityIssue {
+  key: string;
+  label: string;
+  count: number;
+}
+
+export interface DataQualityPayload {
+  issues: DataQualityIssue[];
 }

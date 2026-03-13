@@ -28,7 +28,7 @@ export default async function ProductsPage() {
                 )}
               </div>
               <div className="mt-5">
-                <p className="text-xs uppercase tracking-[0.16em] text-slate-500">{product.brand || "UNIFORMA"}</p>
+                <p className="text-xs uppercase tracking-[0.16em] text-slate-500">{product.brand?.name || "UNIFORMA"}</p>
                 <h2 className="mt-2 text-2xl font-semibold text-[#10233f]">{product.name}</h2>
                 <p className="mt-3 line-clamp-3 text-sm text-slate-600">{product.description || "Kontakta oss for offert och tryckalternativ."}</p>
               </div>

@@ -15,12 +15,11 @@ export function VariantList({ variants }: { variants: ProductVariant[] }) {
             </div>
             <div className="flex gap-2">
               <Badge variant={variant.is_active ? "success" : "danger"}>{variant.is_active ? "Active" : "Inactive"}</Badge>
-              {variant.deleted_at ? <Badge variant="danger">Deleted</Badge> : null}
             </div>
           </div>
           <div className="mt-3 grid gap-3 text-sm text-slate-600 md:grid-cols-4">
             <p>EAN: {variant.ean ?? "N/A"}</p>
-            <p>Price: {variant.price ? `${variant.price} ${variant.currency ?? ""}` : "N/A"}</p>
+            <p>Price: {variant.price ? `${variant.price} SEK` : "N/A"}</p>
             <p>Stock: {variant.stock_quantity}</p>
             <p>Updated: {new Date(variant.updated_at).toLocaleString()}</p>
           </div>
