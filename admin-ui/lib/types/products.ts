@@ -45,6 +45,7 @@ export interface AdminProduct {
   description: string | null;
   brand: string | null;
   is_active: boolean;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;
@@ -54,6 +55,22 @@ export interface AdminProduct {
   variants: ProductVariant[];
   applied_overrides: Record<string, string | number | boolean | null | Record<string, unknown> | unknown[]>;
   source_product?: SourceProductView | null;
+}
+
+export interface PublicProduct {
+  id: string;
+  external_id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  brand: string | null;
+  is_active: boolean;
+  image_url: string | null;
+  created_at: string;
+  updated_at: string;
+  category: Category | null;
+  images: ProductImage[];
+  variants: ProductVariant[];
 }
 
 export interface ProductListFilters {
@@ -76,4 +93,23 @@ export interface AdminImagePayload {
 
 export interface AdminOverridePayload {
   overrides: Record<string, string | number | boolean | null>;
+}
+
+export interface AdminProductUpsertPayload {
+  name: string;
+  slug?: string | null;
+  description?: string | null;
+  brand?: string | null;
+  category?: string | null;
+  image_url?: string | null;
+  is_active: boolean;
+}
+
+export interface AdminProductPublishPayload {
+  is_active: boolean;
+}
+
+export interface UploadResponse {
+  filename: string;
+  url: string;
 }

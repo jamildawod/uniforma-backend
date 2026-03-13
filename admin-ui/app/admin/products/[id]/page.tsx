@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { ProductEditor } from "@/components/admin/product-editor";
 import { ImageManager } from "@/components/admin/image-manager";
 import { OverrideDiff } from "@/components/admin/override-diff";
 import { OverrideEditor } from "@/components/admin/override-editor";
@@ -42,6 +43,12 @@ export default async function AdminProductDetailPage({
 
       <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
         <Panel>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-steel">Product Management</p>
+          <div className="mt-4">
+            <ProductEditor mode="edit" product={product} />
+          </div>
+        </Panel>
+        <Panel>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-steel">PIM Source</p>
           <div className="mt-4 grid gap-3 text-sm text-slate-700">
             <p><span className="font-medium">Name:</span> {product.source_product?.name ?? product.name}</p>
@@ -49,13 +56,14 @@ export default async function AdminProductDetailPage({
             <p><span className="font-medium">Description:</span> {product.source_product?.description ?? product.description ?? "N/A"}</p>
           </div>
         </Panel>
-        <Panel>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-steel">Override Editor</p>
-          <div className="mt-4">
-            <OverrideEditor product={product} />
-          </div>
-        </Panel>
       </div>
+
+      <Panel>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-steel">Override Editor</p>
+        <div className="mt-4">
+          <OverrideEditor product={product} />
+        </div>
+      </Panel>
 
       <OverrideDiff product={product} />
 

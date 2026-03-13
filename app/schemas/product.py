@@ -50,6 +50,9 @@ class ProductRead(BaseModel):
     description: str | None
     brand: str | None
     is_active: bool
+    image_url: str | None = None
+    deleted_at: datetime | None = None
+    last_seen_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
     category: CategoryRead | None = None
@@ -75,3 +78,32 @@ class AdminProductRead(ProductRead):
     applied_overrides: dict[str, str | int | float | bool | list | dict | None] = Field(
         default_factory=dict,
     )
+
+
+class AdminProductCreateRequest(BaseModel):
+    name: str = Field(min_length=2, max_length=255)
+    slug: str | None = Field(default=None, max_length=255)
+    description: str | None = None
+    brand: str | None = Field(default=None, max_length=255)
+    category: str | None = Field(default=None, max_length=255)
+    image_url: str | None = Field(default=None, max_length=1024)
+    is_active: bool = True
+
+
+class AdminProductUpdateRequest(BaseModel):
+    name: str = Field(min_length=2, max_length=255)
+    slug: str | None = Field(default=None, max_length=255)
+    description: str | None = None
+    brand: str | None = Field(default=None, max_length=255)
+    category: str | None = Field(default=None, max_length=255)
+    image_url: str | None = Field(default=None, max_length=1024)
+    is_active: bool = True
+
+
+class AdminProductPublishRequest(BaseModel):
+    is_active: bool
+
+
+class AdminUploadResponse(BaseModel):
+    filename: str
+    url: str

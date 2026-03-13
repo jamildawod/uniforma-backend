@@ -20,7 +20,9 @@ export function AdminShell({
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <nav className="flex flex-wrap gap-4 text-sm">
+            <Link href="/admin">Dashboard</Link>
             <Link href="/admin/products">Products</Link>
+            <Link href="/admin/quotes">Quotes</Link>
             <Link href="/admin/intelligence">Intelligence</Link>
             <Link href="/admin/sync">Sync</Link>
           </nav>

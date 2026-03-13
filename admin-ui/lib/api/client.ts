@@ -1,5 +1,15 @@
-import type { AdminImagePayload, AdminOverridePayload, AdminProduct, ProductListFilters } from "@/lib/types/products";
+import type {
+  AdminImagePayload,
+  AdminOverridePayload,
+  AdminProduct,
+  AdminProductPublishPayload,
+  AdminProductUpsertPayload,
+  ProductListFilters,
+  PublicProduct,
+  UploadResponse
+} from "@/lib/types/products";
 import type { AuthTokens } from "@/lib/types/auth";
+import type { QuoteRequest, QuoteRequestPayload } from "@/lib/types/quotes";
 import type { PimSyncResponse, SyncRun } from "@/lib/types/sync";
 import { apiEndpoints } from "@/lib/api/endpoints";
 
@@ -26,12 +36,14 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     }
   }
 
+  const headers = new Headers(options.headers ?? {});
+  if (!(options.body instanceof FormData) && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
   const response = await fetch(url.pathname + url.search, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers ?? {})
-    },
+    headers,
     credentials: "include",
     cache: "no-store"
   });
@@ -76,10 +88,46 @@ export function patchProductOverride(productId: string, payload: AdminOverridePa
   });
 }
 
+export function createAdminProduct(payload: AdminProductUpsertPayload): Promise<AdminProduct> {
+  return apiFetch<AdminProduct>(toUniformaProxy(apiEndpoints.adminProducts), {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function updateAdminProduct(productId: string, payload: AdminProductUpsertPayload): Promise<AdminProduct> {
+  return apiFetch<AdminProduct>(toUniformaProxy(apiEndpoints.adminProduct(productId)), {
+    method: "PUT",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function deleteAdminProduct(productId: string): Promise<void> {
+  return apiFetch<void>(toUniformaProxy(apiEndpoints.adminProduct(productId)), {
+    method: "DELETE"
+  });
+}
+
+export function publishAdminProduct(productId: string, payload: AdminProductPublishPayload): Promise<AdminProduct> {
+  return apiFetch<AdminProduct>(toUniformaProxy(apiEndpoints.adminProductPublish(productId)), {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
 export function createProductImage(productId: string, payload: AdminImagePayload): Promise<AdminProduct> {
   return apiFetch<AdminProduct>(toUniformaProxy(apiEndpoints.adminProductImage(productId)), {
     method: "POST",
     body: JSON.stringify(payload)
+  });
+}
+
+export function uploadAdminImage(file: File): Promise<UploadResponse> {
+  const formData = new FormData();
+  formData.set("file", file);
+  return apiFetch<UploadResponse>(toUniformaProxy(apiEndpoints.adminUpload), {
+    method: "POST",
+    body: formData
   });
 }
 
@@ -103,6 +151,25 @@ export function getAdminProducts(filters: ProductListFilters): Promise<AdminProd
       limit: filters.pageSize,
       offset: (filters.page - 1) * filters.pageSize
     }
+  });
+}
+
+export function getAdminQuotes(): Promise<QuoteRequest[]> {
+  return apiFetch<QuoteRequest[]>(toUniformaProxy(apiEndpoints.adminQuotes));
+}
+
+export function getPublicProducts(): Promise<PublicProduct[]> {
+  return apiFetch<PublicProduct[]>(apiEndpoints.publicProducts);
+}
+
+export function getPublicProduct(slug: string): Promise<PublicProduct> {
+  return apiFetch<PublicProduct>(apiEndpoints.publicProduct(slug));
+}
+
+export function createQuoteRequest(payload: QuoteRequestPayload): Promise<QuoteRequest> {
+  return apiFetch<QuoteRequest>(apiEndpoints.quotes, {
+    method: "POST",
+    body: JSON.stringify(payload)
   });
 }
 

@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 
 from app.api.router import router as api_router
@@ -95,4 +96,6 @@ app = FastAPI(
     debug=settings.app_debug,
     lifespan=lifespan,
 )
+settings.uploads_root.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=settings.uploads_root), name="uploads")
 app.include_router(api_router)

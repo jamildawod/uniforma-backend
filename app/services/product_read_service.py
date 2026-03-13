@@ -144,6 +144,7 @@ class ProductReadService:
         for field_name, override_value in applied_overrides.items():
             if field_name in merged:
                 merged[field_name] = override_value
+        merged["image_url"] = self._resolve_image_url(product)
         return ProductRead.model_validate(merged)
 
     def _merge_admin_product(self, product: Product, overrides: list[AdminOverride]) -> AdminProductRead:
@@ -166,3 +167,10 @@ class ProductReadService:
                 continue
             filtered[override.field_name] = override.override_value
         return filtered
+
+    def _resolve_image_url(self, product: Product) -> str | None:
+        ordered_images = sorted(product.images, key=lambda image: (not image.is_primary, image.sort_order, image.id))
+        if not ordered_images:
+            return None
+        image = ordered_images[0]
+        return image.local_path or image.external_path

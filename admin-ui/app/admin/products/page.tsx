@@ -2,6 +2,7 @@ import { ProductFilterForm } from "@/components/admin/product-filter-form";
 import { ProductTable } from "@/components/admin/product-table";
 import { ErrorState } from "@/components/ui/error-state";
 import { Panel } from "@/components/ui/panel";
+import Link from "next/link";
 import { fetchAdminProducts } from "@/lib/api/server";
 import type { ProductListFilters } from "@/lib/types/products";
 
@@ -31,6 +32,9 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-steel">Catalog</p>
               <h2 className="mt-1 text-2xl font-semibold text-ink">Products</h2>
             </div>
+            <Link className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-white" href="/admin/products/new">
+              New product
+            </Link>
           </div>
           <div className="mt-6">
             <ProductFilterForm />

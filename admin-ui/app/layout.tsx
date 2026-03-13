@@ -6,8 +6,8 @@ import { Providers } from "@/app/providers";
 import { env } from "@/lib/config/env";
 
 export const metadata: Metadata = {
-  title: env.NEXT_PUBLIC_APP_NAME,
-  description: "Enterprise admin console for Uniforma."
+  title: "UNIFORMA",
+  description: "UNIFORMA erbjuder profilprodukter, arbetsklader och tryck for foretag."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -18,7 +18,15 @@ export async function POST(request: Request, context: Context) {
   return proxyRequest(request, context);
 }
 
+export async function PUT(request: Request, context: Context) {
+  return proxyRequest(request, context);
+}
+
 export async function PATCH(request: Request, context: Context) {
+  return proxyRequest(request, context);
+}
+
+export async function DELETE(request: Request, context: Context) {
   return proxyRequest(request, context);
 }
 
@@ -28,13 +36,20 @@ async function proxyRequest(request: Request, context: Context) {
   const url = new URL(request.url);
   const upstreamUrl = `${env.UNIFORMA_API_BASE_URL}/${path}${url.search}`;
 
+  const contentType = request.headers.get("content-type");
+  const requestBody = request.method === "GET" || request.method === "DELETE" ? undefined : await request.arrayBuffer();
+  const upstreamHeaders = new Headers();
+  if (contentType) {
+    upstreamHeaders.set("Content-Type", contentType);
+  }
+  if (token) {
+    upstreamHeaders.set("Authorization", `Bearer ${token}`);
+  }
+
   const upstreamResponse = await fetch(upstreamUrl, {
     method: request.method,
-    headers: {
-      "Content-Type": request.headers.get("content-type") ?? "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
-    },
-    body: request.method === "GET" ? undefined : await request.text(),
+    headers: upstreamHeaders,
+    body: requestBody,
     cache: "no-store"
   });
 

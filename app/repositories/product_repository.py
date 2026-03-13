@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -60,6 +60,19 @@ class ProductRepository:
         result = await self.session.execute(statement)
         return result.scalar_one_or_none()
 
+    async def get_any_product_by_slug(self, slug: str) -> Product | None:
+        statement = (
+            select(Product)
+            .where(Product.slug == slug)
+            .options(
+                selectinload(Product.category),
+                selectinload(Product.images),
+                selectinload(Product.variants).selectinload(ProductVariant.images),
+            )
+        )
+        result = await self.session.execute(statement)
+        return result.scalar_one_or_none()
+
     async def get_product_by_id(self, product_id: uuid.UUID) -> Product | None:
         statement = (
             select(Product)
@@ -72,6 +85,13 @@ class ProductRepository:
         )
         result = await self.session.execute(statement)
         return result.scalar_one_or_none()
+
+    async def get_product_by_identifier(self, identifier: str) -> Product | None:
+        try:
+            product_id = uuid.UUID(identifier)
+        except ValueError:
+            return await self.get_product_by_slug(identifier)
+        return await self.get_product_by_id(product_id)
 
     async def get_by_external_ids(self, external_ids: list[str]) -> dict[str, Product]:
         if not external_ids:
@@ -144,6 +164,22 @@ class ProductRepository:
         return category
 
     async def add_product(self, product: Product) -> Product:
+        self.session.add(product)
+        await self.session.flush()
+        return product
+
+    async def get_category_by_slug(self, slug: str) -> Category | None:
+        result = await self.session.execute(select(Category).where(Category.slug == slug))
+        return result.scalar_one_or_none()
+
+    async def update_product(self, product: Product) -> Product:
+        self.session.add(product)
+        await self.session.flush()
+        return product
+
+    async def soft_delete_product(self, product: Product) -> Product:
+        product.deleted_at = datetime.now(timezone.utc)
+        product.is_active = False
         self.session.add(product)
         await self.session.flush()
         return product

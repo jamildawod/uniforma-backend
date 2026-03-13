@@ -14,6 +14,7 @@ services:
     volumes:
       - ./storage:/opt/uniforma/storage
       - ./data:/opt/uniforma/data:ro
+      - ./uploads:/opt/uniforma/uploads
     networks:
       uniforma-net:
         aliases:

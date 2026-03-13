@@ -2,8 +2,10 @@ import { cookies } from "next/headers";
 
 import { env } from "@/lib/config/env";
 import { AUTH_COOKIE } from "@/lib/auth/cookies";
-import type { AdminProduct, ProductListFilters } from "@/lib/types/products";
+import type { AdminProduct, ProductListFilters, PublicProduct } from "@/lib/types/products";
+import type { QuoteRequest } from "@/lib/types/quotes";
 import type { SyncRun } from "@/lib/types/sync";
+import type { SystemHealth } from "@/types/intelligence";
 
 export async function fetchAdminProducts(filters: ProductListFilters): Promise<AdminProduct[]> {
   const products = await fetchWithToken<AdminProduct[]>(
@@ -29,12 +31,56 @@ export async function fetchSyncRuns(): Promise<SyncRun[]> {
   }
 }
 
+export async function fetchAdminQuotes(): Promise<QuoteRequest[]> {
+  try {
+    return await fetchWithToken<QuoteRequest[]>("/api/v1/admin/quotes");
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchSystemHealthSummary(): Promise<SystemHealth | null> {
+  try {
+    return await fetchWithToken<SystemHealth>("/api/v1/admin/intelligence/summary");
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchPublicProducts(): Promise<PublicProduct[]> {
+  try {
+    return await fetchWithoutToken<PublicProduct[]>("/api/v1/products");
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchPublicProduct(slug: string): Promise<PublicProduct | null> {
+  try {
+    return await fetchWithoutToken<PublicProduct>(`/api/v1/products/${slug}`);
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchWithToken<T>(path: string): Promise<T> {
   const token = cookies().get(AUTH_COOKIE)?.value;
   const response = await fetch(`${env.UNIFORMA_API_BASE_URL}${path}`, {
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {})
     },
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${path}`);
+  }
+
+  return (await response.json()) as T;
+}
+
+async function fetchWithoutToken<T>(path: string): Promise<T> {
+  const response = await fetch(`${env.UNIFORMA_API_BASE_URL}${path}`, {
     cache: "no-store"
   });
 

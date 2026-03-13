@@ -6,6 +6,7 @@ __pycache__/
 venv/
 .env.*
 storage/
+uploads/
 data/
 app/db/migrations/__pycache__/
 *.log

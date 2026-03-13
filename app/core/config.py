@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     ftp_timeout_seconds: int = 30
 
     storage_root: Path = Path("/opt/uniforma/storage")
+    uploads_root: Path = Path("/opt/uniforma/uploads")
 
     model_config = SettingsConfigDict(
         env_file=".env",

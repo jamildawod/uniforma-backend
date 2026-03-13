@@ -9,9 +9,12 @@ from app.db.session import get_db
 from app.models.user import User
 from app.repositories.admin_override_repository import AdminOverrideRepository
 from app.repositories.product_repository import ProductRepository
+from app.repositories.quote_repository import QuoteRepository
 from app.repositories.user_repository import UserRepository
 from app.services.auth_service import AuthService
+from app.services.product_service import ProductService
 from app.services.product_read_service import ProductReadService
+from app.services.quote_service import QuoteService
 from app.services.user_service import UserService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
@@ -30,6 +33,17 @@ async def get_product_read_service(db: AsyncSession = Depends(get_db)) -> Produc
         ProductRepository(db),
         AdminOverrideRepository(db),
     )
+
+
+async def get_product_service(db: AsyncSession = Depends(get_db)) -> ProductService:
+    return ProductService(
+        ProductRepository(db),
+        AdminOverrideRepository(db),
+    )
+
+
+async def get_quote_service(db: AsyncSession = Depends(get_db)) -> QuoteService:
+    return QuoteService(QuoteRepository(db))
 
 
 async def get_current_user(

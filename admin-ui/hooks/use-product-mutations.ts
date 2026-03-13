@@ -2,8 +2,22 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { createProductImage, patchProductOverride, triggerPimSync } from "@/lib/api/client";
-import type { AdminImagePayload, AdminOverridePayload, AdminProduct } from "@/lib/types/products";
+import {
+  createAdminProduct,
+  createProductImage,
+  deleteAdminProduct,
+  patchProductOverride,
+  publishAdminProduct,
+  triggerPimSync,
+  updateAdminProduct,
+  uploadAdminImage
+} from "@/lib/api/client";
+import type {
+  AdminImagePayload,
+  AdminOverridePayload,
+  AdminProduct,
+  AdminProductUpsertPayload
+} from "@/lib/types/products";
 
 export function usePatchProductOverride(productId: string) {
   const queryClient = useQueryClient();
@@ -46,6 +60,59 @@ export function useCreateProductImage(productId: string) {
       queryClient.setQueryData(["admin-product", productId], next);
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
     }
+  });
+}
+
+export function useCreateAdminProduct() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: AdminProductUpsertPayload) => createAdminProduct(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    }
+  });
+}
+
+export function useUpdateAdminProduct(productId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: AdminProductUpsertPayload) => updateAdminProduct(productId, payload),
+    onSuccess: (next) => {
+      queryClient.setQueryData(["admin-product", productId], next);
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    }
+  });
+}
+
+export function useDeleteAdminProduct(productId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => deleteAdminProduct(productId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.removeQueries({ queryKey: ["admin-product", productId] });
+    }
+  });
+}
+
+export function usePublishAdminProduct(productId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (isActive: boolean) => publishAdminProduct(productId, { is_active: isActive }),
+    onSuccess: (next) => {
+      queryClient.setQueryData(["admin-product", productId], next);
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    }
+  });
+}
+
+export function useUploadAdminImage() {
+  return useMutation({
+    mutationFn: (file: File) => uploadAdminImage(file)
   });
 }
 
