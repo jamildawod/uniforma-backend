@@ -6,16 +6,44 @@ import { AUTH_COOKIE } from "@/lib/auth/cookies";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(AUTH_COOKIE)?.value;
+  const requestHeaders = new Headers(request.headers);
 
-  if (pathname.startsWith("/admin/login") && token) {
-    return NextResponse.redirect(new URL("/admin/products", request.url));
+  requestHeaders.set("x-pathname", pathname);
+
+  if (pathname.startsWith("/admin/login")) {
+    if (token) {
+      return NextResponse.redirect(new URL("/admin/products", request.url));
+    }
+
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders
+      }
+    });
   }
 
-  if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login") && !token) {
+  if (
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/static") ||
+    pathname.startsWith("/assets")
+  ) {
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders
+      }
+    });
+  }
+
+  if (pathname.startsWith("/admin") && !token) {
     return NextResponse.redirect(new URL("/admin/login", request.url));
   }
 
-  return NextResponse.next();
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders
+    }
+  });
 }
 
 export const config = {
