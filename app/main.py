@@ -4,6 +4,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ValidationError
 
 from app.api.router import router as api_router
@@ -95,6 +96,16 @@ app = FastAPI(
     title=settings.app_name,
     debug=settings.app_debug,
     lifespan=lifespan,
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://uniforma.livosys.se",
+        "https://admin.uniforma.livosys.se",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 settings.uploads_root.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=settings.uploads_root), name="uploads")
