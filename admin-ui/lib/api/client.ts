@@ -49,9 +49,17 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
 }
 
 export function loginRequest(payload: { email: string; password: string }): Promise<AuthTokens> {
-  return apiFetch<AuthTokens>("/api/auth/login", {
+  const form = new URLSearchParams({
+    username: payload.email,
+    password: payload.password
+  });
+
+  return apiFetch<AuthTokens>("/api/v1/auth/login", {
     method: "POST",
-    body: JSON.stringify(payload)
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: form.toString()
   });
 }
 

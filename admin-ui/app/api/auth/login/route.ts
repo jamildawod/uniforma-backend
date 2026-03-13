@@ -7,9 +7,9 @@ import { apiEndpoints } from "@/lib/api/endpoints";
 import type { AuthTokens } from "@/lib/types/auth";
 
 export async function POST(request: Request) {
-  const payload = (await request.json()) as { email: string; password: string };
+  const payload = await readLoginPayload(request);
   const form = new URLSearchParams({
-    username: payload.email,
+    username: payload.username,
     password: payload.password
   });
 
@@ -52,6 +52,23 @@ export async function POST(request: Request) {
   });
 
   return nextResponse;
+}
+
+async function readLoginPayload(request: Request): Promise<{ username: string; password: string }> {
+  const contentType = request.headers.get("content-type") ?? "";
+  if (contentType.includes("application/x-www-form-urlencoded")) {
+    const formData = await request.formData();
+    return {
+      username: String(formData.get("username") ?? ""),
+      password: String(formData.get("password") ?? "")
+    };
+  }
+
+  const payload = (await request.json()) as { email?: string; username?: string; password?: string };
+  return {
+    username: payload.username ?? payload.email ?? "",
+    password: payload.password ?? ""
+  };
 }
 
 function safeDecode(token: string): { role?: string } | null {
