@@ -47,6 +47,7 @@ class Settings(BaseSettings):
 
     storage_root: Path = Path("/opt/uniforma/storage")
     uploads_root: Path = Path("/opt/uniforma/uploads")
+    pim_imports_root: Path = Path("/opt/uniforma/pim_imports")
 
     model_config = SettingsConfigDict(
         env_file=".env",

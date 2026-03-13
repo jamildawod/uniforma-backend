@@ -25,6 +25,7 @@ export function AdminShell({
             <Link href="/admin/brands">Brands</Link>
             <Link href="/admin/categories">Categories</Link>
             <Link href="/admin/media">Media</Link>
+            <Link href="/admin/pim">PIM</Link>
             <Link href="/admin/quotes">Quotes</Link>
             <Link href="/admin/intelligence">Intelligence</Link>
             <Link href="/admin/sync">Sync</Link>

@@ -14,6 +14,7 @@ import type {
   PublicProduct
 } from "@/lib/types/products";
 import type { QuoteRequest } from "@/lib/types/quotes";
+import type { PimImportRun, PimSource } from "@/lib/types/pim";
 import type { SystemHealth } from "@/types/intelligence";
 
 export async function fetchAdminProducts(filters: ProductListFilters): Promise<AdminProduct[]> {
@@ -83,6 +84,22 @@ export async function fetchAdminDataQuality(): Promise<DataQualityPayload | null
 export async function fetchSyncRuns(): Promise<SyncRun[]> {
   try {
     return await fetchWithToken<SyncRun[]>("/api/v1/admin/sync/runs");
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchPimSources(): Promise<PimSource[]> {
+  try {
+    return await fetchWithToken<PimSource[]>("/api/v1/admin/pim/sources");
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchPimImports(): Promise<PimImportRun[]> {
+  try {
+    return await fetchWithToken<PimImportRun[]>("/api/v1/admin/pim/imports");
   } catch {
     return [];
   }

@@ -11,12 +11,12 @@ from app.api.router import router as api_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
 from app.db.session import dispose_engine, get_session_factory
+from app.repositories.pim_repository import PimRepository
 from app.repositories.product_repository import ProductRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth import UserCreate
-from app.services.ftp_image_service import FtpImageService
-from app.services.pim_ingestion_service import PimIngestionService
-from app.services.pim_sync_service import PimSyncService
+from app.services.pim_downloader import PimDownloader
+from app.services.pim_import_service import PimImportService
 from app.services.user_service import UserService
 
 configure_logging()
@@ -60,13 +60,14 @@ def _build_scheduler() -> AsyncIOScheduler:
     async def scheduled_sync() -> None:
         session_factory = get_session_factory()
         async with session_factory() as session:
-            product_repository = ProductRepository(session)
-            sync_service = PimSyncService(
-                PimIngestionService(session, product_repository, settings),
-                FtpImageService(session, product_repository, settings),
+            import_service = PimImportService(
+                session,
                 settings,
+                ProductRepository(session),
+                PimRepository(session),
+                PimDownloader(settings),
             )
-            await sync_service.run_sync()
+            await import_service.run_active_imports()
 
     if settings.pim_sync_enabled:
         scheduler.add_job(
@@ -107,6 +108,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+settings.pim_imports_root.mkdir(parents=True, exist_ok=True)
 settings.uploads_root.mkdir(parents=True, exist_ok=True)
+settings.uploads_root.joinpath("products").mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=settings.uploads_root), name="uploads")
 app.include_router(api_router)

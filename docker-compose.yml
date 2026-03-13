@@ -15,6 +15,7 @@ services:
       - ./storage:/opt/uniforma/storage
       - ./data:/opt/uniforma/data:ro
       - ./uploads:/opt/uniforma/uploads
+      - ./pim_imports:/opt/uniforma/pim_imports
     networks:
       uniforma-net:
         aliases:

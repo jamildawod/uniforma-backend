@@ -193,7 +193,7 @@ class ProductReadService:
         if not ordered_images:
             return None
         image = ordered_images[0]
-        return image.local_path or image.url or image.external_path
+        return image.url or image.local_path or image.external_path
 
     def _status_value(self, product: Product) -> str:
         return product.status.value if hasattr(product.status, "value") else str(product.status)

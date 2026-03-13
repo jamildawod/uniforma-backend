@@ -8,15 +8,19 @@ from app.core.security import decode_token
 from app.db.session import get_db
 from app.models.user import User
 from app.repositories.admin_override_repository import AdminOverrideRepository
+from app.repositories.pim_repository import PimRepository
 from app.repositories.product_repository import ProductRepository
 from app.repositories.quote_repository import QuoteRepository
 from app.repositories.user_repository import UserRepository
 from app.services.auth_service import AuthService
 from app.services.data_quality_service import DataQualityService
+from app.services.pim_downloader import PimDownloader
+from app.services.pim_import_service import PimImportService
 from app.services.product_service import ProductService
 from app.services.product_read_service import ProductReadService
 from app.services.quote_service import QuoteService
 from app.services.user_service import UserService
+from app.core.config import get_settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -49,6 +53,17 @@ async def get_quote_service(db: AsyncSession = Depends(get_db)) -> QuoteService:
 
 async def get_data_quality_service(db: AsyncSession = Depends(get_db)) -> DataQualityService:
     return DataQualityService(ProductRepository(db))
+
+
+async def get_pim_import_service(db: AsyncSession = Depends(get_db)) -> PimImportService:
+    settings = get_settings()
+    return PimImportService(
+        db,
+        settings,
+        ProductRepository(db),
+        PimRepository(db),
+        PimDownloader(settings),
+    )
 
 
 async def get_current_user(

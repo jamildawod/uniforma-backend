@@ -2,6 +2,7 @@ from app.models.attribute import Attribute
 from app.models.admin_override import AdminOverride
 from app.models.brand import Brand
 from app.models.category import Category
+from app.models.pim_import_run import PimImportRun
 from app.models.pim_source import PimSource
 from app.models.pim_sync_run import PimSyncRun
 from app.models.product import Product
@@ -18,6 +19,7 @@ __all__ = [
     "Brand",
     "Category",
     "PimSource",
+    "PimImportRun",
     "PimSyncRun",
     "Product",
     "ProductAttributeValue",

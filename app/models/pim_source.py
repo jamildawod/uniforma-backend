@@ -1,16 +1,18 @@
 import enum
 
-from sqlalchemy import Enum, String, Text
-from sqlalchemy.dialects.postgresql import JSONB
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, Enum, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
 
 class PimSourceType(str, enum.Enum):
-    csv = "csv"
     ftp = "ftp"
-    api = "api"
+    sftp = "sftp"
+    http = "http"
+    local = "local"
 
 
 class PimSource(Base):
@@ -22,6 +24,19 @@ class PimSource(Base):
         Enum(PimSourceType, name="pim_source_type_enum"),
         nullable=False,
     )
-    config_json: Mapped[dict | list | str | int | float | bool | None] = mapped_column(JSONB, nullable=True)
+    host: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    port: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    username: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    password: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    path: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    file_pattern: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    schedule: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
 
+    import_runs: Mapped[list["PimImportRun"]] = relationship(back_populates="source", cascade="all, delete-orphan")
     sync_runs: Mapped[list["PimSyncRun"]] = relationship(back_populates="source", cascade="all, delete-orphan")

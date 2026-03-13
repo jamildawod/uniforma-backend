@@ -20,4 +20,7 @@ export interface PimSyncResponse {
   variants_unchanged: number;
   images_discovered: number;
   images_synced: number;
+  records_processed: number;
+  records_created: number;
+  records_updated: number;
 }

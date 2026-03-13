@@ -17,6 +17,7 @@ import type {
   UploadResponse
 } from "@/lib/types/products";
 import type { QuoteRequest, QuoteRequestPayload } from "@/lib/types/quotes";
+import type { PimConnectionTestResponse, PimImportRun, PimSource, PimSourcePayload } from "@/lib/types/pim";
 import type { PimSyncResponse, SyncRun } from "@/lib/types/sync";
 
 type RequestOptions = RequestInit & {
@@ -215,6 +216,34 @@ export function triggerPimSync(): Promise<PimSyncResponse> {
 
 export function getSyncRuns(): Promise<SyncRun[]> {
   return apiFetch<SyncRun[]>(toUniformaProxy(apiEndpoints.adminSyncRuns));
+}
+
+export function getPimSources(): Promise<PimSource[]> {
+  return apiFetch<PimSource[]>(toUniformaProxy(apiEndpoints.adminPimSources));
+}
+
+export function createPimSource(payload: PimSourcePayload): Promise<PimSource> {
+  return apiFetch<PimSource>(toUniformaProxy(apiEndpoints.adminPimSources), {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function testPimSource(sourceId: number): Promise<PimConnectionTestResponse> {
+  return apiFetch<PimConnectionTestResponse>(toUniformaProxy(apiEndpoints.adminPimSourceTest(sourceId)), {
+    method: "POST"
+  });
+}
+
+export function runPimImport(sourceId: number): Promise<PimSyncResponse> {
+  return apiFetch<PimSyncResponse>(toUniformaProxy(apiEndpoints.adminPimRunImport), {
+    method: "POST",
+    body: JSON.stringify({ source_id: sourceId })
+  });
+}
+
+export function getPimImports(): Promise<PimImportRun[]> {
+  return apiFetch<PimImportRun[]>(toUniformaProxy(apiEndpoints.adminPimImports));
 }
 
 export function getPublicProducts(): Promise<PublicProduct[]> {
