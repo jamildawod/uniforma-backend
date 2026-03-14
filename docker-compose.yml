@@ -11,6 +11,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     volumes:
       - ./storage:/opt/uniforma/storage
       - ./data:/opt/uniforma/data:ro
@@ -48,6 +50,16 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
+
+  redis:
+    image: redis:7-alpine
+    container_name: uniforma-redis
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    networks:
+      uniforma-net:
+        aliases:
+          - uniforma-redis
+    restart: unless-stopped
 
 networks:
   uniforma-net:

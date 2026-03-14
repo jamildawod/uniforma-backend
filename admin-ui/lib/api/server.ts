@@ -7,6 +7,9 @@ import type {
   AdminProduct,
   AttributeDefinition,
   Brand,
+  CategoryTreeNode,
+  CatalogSearchResponse,
+  CatalogProductList,
   Category,
   DataQualityPayload,
   MediaItem,
@@ -113,11 +116,27 @@ export async function fetchSystemHealthSummary(): Promise<SystemHealth | null> {
   }
 }
 
-export async function fetchPublicProducts(): Promise<PublicProduct[]> {
+export async function fetchPublicProducts(): Promise<CatalogProductList> {
   try {
-    return await fetchWithoutToken<PublicProduct[]>("/api/v1/products");
+    return await fetchWithoutToken<CatalogProductList>("/api/v1/products");
+  } catch {
+    return { products: [], next_cursor: null, filters: { categories: [], colors: [], sizes: [] } };
+  }
+}
+
+export async function fetchCatalogCategories(): Promise<CategoryTreeNode[]> {
+  try {
+    return await fetchWithoutToken<CategoryTreeNode[]>("/api/v1/categories");
   } catch {
     return [];
+  }
+}
+
+export async function fetchCatalogSearch(query: string): Promise<CatalogSearchResponse> {
+  try {
+    return await fetchWithoutToken<CatalogSearchResponse>(`/api/v1/search?q=${encodeURIComponent(query)}`);
+  } catch {
+    return { items: [] };
   }
 }
 

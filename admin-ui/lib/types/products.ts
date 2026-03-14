@@ -94,6 +94,57 @@ export interface PublicProduct {
   attributes: ProductAttributeValue[];
 }
 
+export interface CatalogProductSummary {
+  product_id: string;
+  slug: string;
+  name: string;
+  created_at: string;
+  category: string | null;
+  brand: string | null;
+  price: string | null;
+  primary_image: string | null;
+  colors: string[];
+  sizes: string[];
+}
+
+export interface CatalogFilterOption {
+  value: string;
+  count: number;
+}
+
+export interface CatalogFilters {
+  categories: CatalogFilterOption[];
+  colors: CatalogFilterOption[];
+  sizes: CatalogFilterOption[];
+}
+
+export interface CategoryTreeNode {
+  id: number;
+  name: string;
+  slug: string;
+  children: CategoryTreeNode[];
+}
+
+export interface CatalogSearchMatch {
+  product_id: string;
+  slug: string;
+  name: string;
+  category: string | null;
+  primary_image: string | null;
+  price: string | null;
+  score: number;
+}
+
+export interface CatalogSearchResponse {
+  items: CatalogSearchMatch[];
+}
+
+export interface CatalogProductList {
+  products: CatalogProductSummary[];
+  next_cursor: string | null;
+  filters: CatalogFilters;
+}
+
 export interface ProductListFilters {
   page: number;
   pageSize: number;

@@ -9,6 +9,9 @@ import type {
   AdminVariantPayload,
   AttributeDefinition,
   Brand,
+  CategoryTreeNode,
+  CatalogProductList,
+  CatalogSearchResponse,
   Category,
   DataQualityPayload,
   MediaItem,
@@ -248,6 +251,20 @@ export function getPimImports(): Promise<PimImportRun[]> {
 
 export function getPublicProducts(): Promise<PublicProduct[]> {
   return apiFetch<PublicProduct[]>(apiEndpoints.publicProducts);
+}
+
+export function getCatalogProducts(query: Record<string, string | number | undefined>): Promise<CatalogProductList> {
+  return apiFetch<CatalogProductList>(toUniformaProxy(apiEndpoints.publicProducts), { query });
+}
+
+export function getCatalogCategories(): Promise<CategoryTreeNode[]> {
+  return apiFetch<CategoryTreeNode[]>(toUniformaProxy(apiEndpoints.publicCategories));
+}
+
+export function searchCatalog(query: string): Promise<CatalogSearchResponse> {
+  return apiFetch<CatalogSearchResponse>(toUniformaProxy(apiEndpoints.publicSearch), {
+    query: { q: query }
+  });
 }
 
 export function getPublicProduct(slug: string): Promise<PublicProduct> {

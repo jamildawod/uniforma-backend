@@ -118,6 +118,57 @@ class ProductSearchResponse(BaseModel):
     items: list[ProductRead]
 
 
+class CatalogProductSummary(BaseModel):
+    product_id: uuid.UUID
+    slug: str
+    name: str
+    created_at: datetime
+    category: str | None = None
+    brand: str | None = None
+    price: Decimal | None = None
+    primary_image: str | None = None
+    colors: list[str] = Field(default_factory=list)
+    sizes: list[str] = Field(default_factory=list)
+
+
+class FilterOption(BaseModel):
+    value: str
+    count: int
+
+
+class ProductListFilters(BaseModel):
+    categories: list[FilterOption] = Field(default_factory=list)
+    colors: list[FilterOption] = Field(default_factory=list)
+    sizes: list[FilterOption] = Field(default_factory=list)
+
+
+class ProductListResponse(BaseModel):
+    products: list[CatalogProductSummary] = Field(default_factory=list)
+    next_cursor: str | None = None
+    filters: ProductListFilters = Field(default_factory=ProductListFilters)
+
+
+class SearchMatch(BaseModel):
+    product_id: uuid.UUID
+    slug: str
+    name: str
+    category: str | None = None
+    primary_image: str | None = None
+    price: Decimal | None = None
+    score: float
+
+
+class SearchResponse(BaseModel):
+    items: list[SearchMatch] = Field(default_factory=list)
+
+
+class CategoryTreeNode(BaseModel):
+    id: int
+    name: str
+    slug: str
+    children: list["CategoryTreeNode"] = Field(default_factory=list)
+
+
 class AdminOverridePatchRequest(BaseModel):
     overrides: dict[str, str | int | float | bool | None]
 
@@ -195,3 +246,6 @@ class DataQualityIssue(BaseModel):
 
 class DataQualityResponse(BaseModel):
     issues: list[DataQualityIssue] = Field(default_factory=list)
+
+
+CategoryTreeNode.model_rebuild()

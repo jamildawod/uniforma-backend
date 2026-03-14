@@ -1,9 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_superuser, get_data_quality_service, get_pim_import_service
+from app.api.deps import (
+    get_current_superuser,
+    get_data_quality_service,
+    get_hejco_import_service,
+    get_pim_import_service,
+)
 from app.db.session import get_db
 from app.models.user import User
+from app.schemas.hejco import HejcoImportResponse
 from app.schemas.pim import (
     PimConnectionTestResponse,
     PimImportRunRead,
@@ -14,6 +20,7 @@ from app.schemas.pim import (
 from app.schemas.product import DataQualityResponse
 from app.schemas.sync import PimSyncResponse
 from app.services.data_quality_service import DataQualityService
+from app.services.hejco_import_service import HejcoImportService
 from app.services.pim_import_service import PimImportService
 
 router = APIRouter()
@@ -83,3 +90,19 @@ async def get_pim_data_quality(
     service: DataQualityService = Depends(get_data_quality_service),
 ) -> DataQualityResponse:
     return await service.get_issues()
+
+
+@router.post("/admin/import-hejco", response_model=HejcoImportResponse)
+async def run_hejco_import(
+    _: User = Depends(get_current_superuser),
+    service: HejcoImportService = Depends(get_hejco_import_service),
+) -> HejcoImportResponse:
+    summary = await service.run_full_sync()
+    return HejcoImportResponse(
+        products_imported=summary.products_imported,
+        products_updated=summary.products_updated,
+        images_matched=summary.images_matched,
+        stock_updated=summary.stock_updated,
+        variants_imported=summary.variants_imported,
+        variants_updated=summary.variants_updated,
+    )

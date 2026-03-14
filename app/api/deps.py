@@ -1,4 +1,5 @@
 from collections.abc import AsyncGenerator
+from functools import lru_cache
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -13,7 +14,11 @@ from app.repositories.product_repository import ProductRepository
 from app.repositories.quote_repository import QuoteRepository
 from app.repositories.user_repository import UserRepository
 from app.services.auth_service import AuthService
+from app.services.cache_service import CacheService
+from app.services.catalog_service import CatalogService
+from app.services.category_tree_service import CategoryTreeService
 from app.services.data_quality_service import DataQualityService
+from app.services.hejco_import_service import HejcoImportService
 from app.services.pim_downloader import PimDownloader
 from app.services.pim_import_service import PimImportService
 from app.services.product_service import ProductService
@@ -40,6 +45,24 @@ async def get_product_read_service(db: AsyncSession = Depends(get_db)) -> Produc
     )
 
 
+@lru_cache
+def get_cache_service() -> CacheService:
+    return CacheService(get_settings())
+
+
+async def get_category_tree_service(db: AsyncSession = Depends(get_db)) -> CategoryTreeService:
+    return CategoryTreeService(db)
+
+
+async def get_catalog_service(
+    db: AsyncSession = Depends(get_db),
+    cache_service: CacheService = Depends(get_cache_service),
+    category_tree_service: CategoryTreeService = Depends(get_category_tree_service),
+) -> CatalogService:
+    settings = get_settings()
+    return CatalogService(db, settings, cache_service, category_tree_service)
+
+
 async def get_product_service(db: AsyncSession = Depends(get_db)) -> ProductService:
     return ProductService(
         ProductRepository(db),
@@ -63,6 +86,15 @@ async def get_pim_import_service(db: AsyncSession = Depends(get_db)) -> PimImpor
         ProductRepository(db),
         PimRepository(db),
         PimDownloader(settings),
+    )
+
+
+async def get_hejco_import_service(db: AsyncSession = Depends(get_db)) -> HejcoImportService:
+    settings = get_settings()
+    return HejcoImportService(
+        db,
+        settings,
+        ProductRepository(db),
     )
 
 

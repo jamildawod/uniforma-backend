@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { QuoteForm } from "@/components/public/quote-form";
@@ -17,7 +18,8 @@ const categories = [
 ];
 
 export default async function HomePage() {
-  const products = await fetchPublicProducts();
+  const catalog = await fetchPublicProducts();
+  const products = catalog.products;
 
   return (
     <main className="bg-[#07162b] text-white">
@@ -89,16 +91,22 @@ export default async function HomePage() {
           </div>
           <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {products.slice(0, 6).map((product) => (
-              <Link key={product.id} className="rounded-[2rem] border border-white/10 bg-white/5 p-5" href={`/products/${product.slug}`}>
+              <Link key={product.product_id} className="rounded-[2rem] border border-white/10 bg-white/5 p-5" href={`/products/${product.slug}`}>
                 <div className="overflow-hidden rounded-[1.5rem] bg-white/10">
-                  {product.image_url ? (
-                    <img alt={product.name} className="h-56 w-full object-cover" src={product.image_url} />
-                  ) : (
-                    <div className="flex h-56 items-center justify-center text-sm text-slate-300">Ingen bild</div>
-                  )}
+                  <Image
+                    src={product.primary_image || "/images/placeholder.webp"}
+                    alt={product.name}
+                    width={500}
+                    height={500}
+                    className="h-56 w-full object-cover"
+                    loading="lazy"
+                    sizes="(max-width:768px) 100vw, 25vw"
+                  />
                 </div>
                 <div className="mt-4">
-                  <p className="text-xs uppercase tracking-[0.16em] text-slate-300">{product.brand?.name || "Uniforma"}</p>
+                  <p className="text-xs uppercase tracking-[0.16em] text-slate-300">
+                    {product.category ?? product.brand ?? "Uniforma"}
+                  </p>
                   <h3 className="mt-2 text-xl font-semibold text-white">{product.name}</h3>
                 </div>
               </Link>

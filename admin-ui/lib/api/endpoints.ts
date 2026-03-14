@@ -25,6 +25,9 @@ export const apiEndpoints = {
   adminPimDataQuality: "/api/v1/admin/pim/data-quality",
   quotes: "/api/v1/quotes",
   publicProducts: "/api/v1/products",
+  publicCategories: "/api/v1/categories",
+  publicFilters: "/api/v1/filters",
+  publicSearch: "/api/v1/search",
   publicProduct: (slug: string) => `/api/v1/products/${slug}`,
   publicProductSearch: "/api/v1/products/search"
 } as const;
