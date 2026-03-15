@@ -44,3 +44,51 @@ export interface PimImportRun {
 export interface PimConnectionTestResponse {
   ok: boolean;
 }
+
+export interface HejcoIntegrationSetting {
+  provider: string;
+  ftp_host: string | null;
+  ftp_username: string | null;
+  ftp_password_masked: string | null;
+  has_password: boolean;
+  pictures_path: string;
+  product_data_path: string;
+  stock_path: string;
+  sync_enabled: boolean;
+  sync_hour: number;
+  timeout_seconds: number;
+  last_sync_at: string | null;
+  last_sync_status: string | null;
+  last_sync_message: string | null;
+  last_imported_product_count: number | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface HejcoIntegrationPayload {
+  provider?: string;
+  ftp_host: string;
+  ftp_username?: string | null;
+  ftp_password?: string | null;
+  pictures_path: string;
+  product_data_path: string;
+  stock_path: string;
+  sync_enabled: boolean;
+  sync_hour: number;
+  timeout_seconds: number;
+}
+
+export interface HejcoConnectionTestResult {
+  ok: boolean;
+  message: string;
+}
+
+export interface HejcoSyncResult {
+  products_imported: number;
+  products_updated: number;
+  images_matched: number;
+  stock_updated: number;
+  variants_imported: number;
+  variants_updated: number;
+  message: string | null;
+}

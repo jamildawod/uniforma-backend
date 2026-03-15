@@ -20,7 +20,16 @@ import type {
   UploadResponse
 } from "@/lib/types/products";
 import type { QuoteRequest, QuoteRequestPayload } from "@/lib/types/quotes";
-import type { PimConnectionTestResponse, PimImportRun, PimSource, PimSourcePayload } from "@/lib/types/pim";
+import type {
+  HejcoConnectionTestResult,
+  HejcoIntegrationPayload,
+  HejcoIntegrationSetting,
+  HejcoSyncResult,
+  PimConnectionTestResponse,
+  PimImportRun,
+  PimSource,
+  PimSourcePayload
+} from "@/lib/types/pim";
 import type { PimSyncResponse, SyncRun } from "@/lib/types/sync";
 
 type RequestOptions = RequestInit & {
@@ -247,6 +256,29 @@ export function runPimImport(sourceId: number): Promise<PimSyncResponse> {
 
 export function getPimImports(): Promise<PimImportRun[]> {
   return apiFetch<PimImportRun[]>(toUniformaProxy(apiEndpoints.adminPimImports));
+}
+
+export function getHejcoIntegration(): Promise<HejcoIntegrationSetting> {
+  return apiFetch<HejcoIntegrationSetting>(toUniformaProxy(apiEndpoints.adminHejcoIntegration));
+}
+
+export function updateHejcoIntegration(payload: HejcoIntegrationPayload): Promise<HejcoIntegrationSetting> {
+  return apiFetch<HejcoIntegrationSetting>(toUniformaProxy(apiEndpoints.adminHejcoIntegration), {
+    method: "PUT",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function testHejcoIntegration(): Promise<HejcoConnectionTestResult> {
+  return apiFetch<HejcoConnectionTestResult>(toUniformaProxy(apiEndpoints.adminHejcoIntegrationTest), {
+    method: "POST"
+  });
+}
+
+export function syncHejcoIntegration(): Promise<HejcoSyncResult> {
+  return apiFetch<HejcoSyncResult>(toUniformaProxy(apiEndpoints.adminHejcoIntegrationSync), {
+    method: "POST"
+  });
 }
 
 export function getPublicProducts(): Promise<PublicProduct[]> {

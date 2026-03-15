@@ -24,6 +24,7 @@ from app.models.product_variant import ProductVariant
 from app.repositories.product_repository import ProductRepository
 from app.services.cache_service import CacheService
 from app.services.image_optimization_service import optimize_images
+from app.services.integration_setting_service import HejcoRuntimeConfig, IntegrationSettingService
 
 
 HEJCO_CATEGORY_MAP = {
@@ -101,6 +102,18 @@ class HejcoImportService:
         self.product_repository = product_repository
         self.image_matcher = HejcoImageMatcher(settings.hejco_images_root)
 
+    async def _runtime_config(self) -> HejcoRuntimeConfig:
+        if self.session is None:
+            return HejcoRuntimeConfig(
+                ftp_host=self.settings.hejco_ftp_host,
+                ftp_username=self.settings.hejco_ftp_user,
+                ftp_password=self.settings.hejco_ftp_pass,
+                sync_enabled=self.settings.hejco_nightly_sync_enabled,
+                sync_hour=self.settings.hejco_nightly_sync_hour,
+                timeout_seconds=self.settings.hejco_ftp_timeout_seconds,
+            )
+        return await IntegrationSettingService(self.session, self.settings).resolve_hejco_config()
+
     def ensure_data_directories(self) -> None:
         for path in (
             self.settings.hejco_data_root,
@@ -113,37 +126,38 @@ class HejcoImportService:
 
     async def download_from_ftp(self) -> dict[str, int]:
         self.ensure_data_directories()
-        return await asyncio.to_thread(self._download_from_ftp)
+        config = await self._runtime_config()
+        return await asyncio.to_thread(self._download_from_ftp, config)
 
-    def _download_from_ftp(self) -> dict[str, int]:
-        if not self.settings.hejco_ftp_user or not self.settings.hejco_ftp_pass:
+    def _download_from_ftp(self, config: HejcoRuntimeConfig) -> dict[str, int]:
+        if not config.ftp_username or not config.ftp_password:
             raise ValueError("HEJCO_FTP_USER and HEJCO_FTP_PASS must be configured.")
 
         ftp = FTP()
         ftp.connect(
-            host=self.settings.hejco_ftp_host,
+            host=config.ftp_host,
             port=21,
-            timeout=self.settings.hejco_ftp_timeout_seconds,
+            timeout=config.timeout_seconds,
         )
-        ftp.login(self.settings.hejco_ftp_user, self.settings.hejco_ftp_pass)
+        ftp.login(config.ftp_username, config.ftp_password)
         counters = {"images": 0, "csv": 0, "stock": 0}
         downloaded_images: list[Path] = []
         try:
             counters["images"] = self._download_tree(
                 ftp,
-                PurePosixPath("/Hejco/Pictures/jpeg"),
+                PurePosixPath(config.pictures_path),
                 self.settings.hejco_images_root,
                 downloaded_files=downloaded_images,
             )
             counters["csv"] = self._download_tree(
                 ftp,
-                PurePosixPath("/Hejco/product_data/Swedish"),
+                PurePosixPath(Path(config.product_data_path).parent.as_posix()),
                 self.settings.hejco_csv_root,
-                file_names={"PIMexport_Hejco_sv-SE.csv"},
+                file_names={Path(config.product_data_path).name},
             )
             counters["stock"] = self._download_tree(
                 ftp,
-                PurePosixPath("/Hejco/stock_availability"),
+                PurePosixPath(config.stock_path),
                 self.settings.hejco_stock_root,
             )
         finally:
@@ -454,11 +468,26 @@ class HejcoImportService:
         return updated
 
     async def run_full_sync(self) -> HejcoImportSummary:
-        await self.download_from_ftp()
-        summary = await self.import_products()
-        summary.stock_updated = await self.sync_stock()
-        await self.refresh_product_list_view()
-        return summary
+        try:
+            await self.download_from_ftp()
+            summary = await self.import_products()
+            summary.stock_updated = await self.sync_stock()
+            await self.refresh_product_list_view()
+            if self.session is not None:
+                await IntegrationSettingService(self.session, self.settings).record_sync_result(
+                    status="success",
+                    message="Hejco sync completed.",
+                    imported_product_count=summary.products_imported + summary.products_updated,
+                )
+            return summary
+        except Exception as exc:
+            if self.session is not None:
+                await IntegrationSettingService(self.session, self.settings).record_sync_result(
+                    status="failed",
+                    message=str(exc),
+                    imported_product_count=None,
+                )
+            raise
 
     async def refresh_product_list_view(self) -> None:
         session = self._require_session()

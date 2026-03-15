@@ -20,7 +20,7 @@ export default async function ProductsPage() {
           </Link>
         </div>
         <div className="mt-10">
-          <ProductGrid initialCatalog={catalog} categories={categories} />
+          <ProductGrid initialCatalog={catalog} categories={categories || []} />
         </div>
       </div>
     </main>

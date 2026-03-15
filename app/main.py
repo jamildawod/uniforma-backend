@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -17,6 +18,7 @@ from app.repositories.user_repository import UserRepository
 from app.schemas.auth import UserCreate
 from app.services.category_tree_service import CategoryTreeService
 from app.services.hejco_import_service import HejcoImportService
+from app.services.integration_setting_service import IntegrationSettingService
 from app.services.pim_downloader import PimDownloader
 from app.services.pim_import_service import PimImportService
 from app.services.user_service import UserService
@@ -80,6 +82,11 @@ def _build_scheduler() -> AsyncIOScheduler:
     async def scheduled_hejco_sync() -> None:
         session_factory = get_session_factory()
         async with session_factory() as session:
+            config = await IntegrationSettingService(session, settings).resolve_hejco_config()
+            if not config.sync_enabled:
+                return
+            if datetime.now(UTC).hour != config.sync_hour:
+                return
             hejco_service = HejcoImportService(
                 session,
                 settings,
@@ -97,7 +104,7 @@ def _build_scheduler() -> AsyncIOScheduler:
     if settings.hejco_nightly_sync_enabled:
         scheduler.add_job(
             scheduled_hejco_sync,
-            CronTrigger(hour=settings.hejco_nightly_sync_hour, minute=settings.hejco_nightly_sync_minute),
+            CronTrigger(hour="*", minute=settings.hejco_nightly_sync_minute),
             id="hejco-nightly-sync",
             replace_existing=True,
         )

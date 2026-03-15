@@ -6,6 +6,9 @@ import Link from "next/link";
 import type { CatalogProductSummary } from "@/lib/types/products";
 
 export function ProductCard({ product }: { product: CatalogProductSummary }) {
+  const productName = product.name ?? "Produkt";
+  const productCategory = product.category ?? product.brand ?? "Uniforma";
+
   return (
     <Link
       href={`/products/${product.slug}`}
@@ -14,7 +17,7 @@ export function ProductCard({ product }: { product: CatalogProductSummary }) {
       <div className="relative overflow-hidden bg-[#edf2f7]">
         <Image
           src={product.primary_image || "/images/placeholder.webp"}
-          alt={product.name}
+          alt={productName}
           width={500}
           height={500}
           sizes="(max-width:768px) 100vw, 25vw"
@@ -23,18 +26,12 @@ export function ProductCard({ product }: { product: CatalogProductSummary }) {
         />
       </div>
       <div className="flex flex-1 flex-col p-4">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-          {product.category ?? product.brand ?? "Uniforma"}
-        </p>
-        <h3 className="mt-2 line-clamp-2 text-lg font-semibold text-[#10233f]">{product.name}</h3>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">{productCategory}</p>
+        <h3 className="mt-2 line-clamp-2 text-lg font-semibold text-[#10233f]">{productName}</h3>
         <p className="mt-3 text-sm font-medium text-[#10233f]">{product.price ? `${product.price} SEK` : "Pris vid offert"}</p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {product.colors.slice(0, 4).map((color) => (
-            <span key={color} className="rounded-full bg-[#f1f5f9] px-3 py-1 text-xs text-slate-600">
-              {color}
-            </span>
-          ))}
-        </div>
+        <p className="mt-4 text-sm text-slate-600">
+          {product.colors?.length ? product.colors.slice(0, 3).join(", ") : "Kontakta oss för färgval."}
+        </p>
       </div>
     </Link>
   );

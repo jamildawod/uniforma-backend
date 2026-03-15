@@ -19,6 +19,7 @@ from app.services.catalog_service import CatalogService
 from app.services.category_tree_service import CategoryTreeService
 from app.services.data_quality_service import DataQualityService
 from app.services.hejco_import_service import HejcoImportService
+from app.services.integration_setting_service import IntegrationSettingService
 from app.services.pim_downloader import PimDownloader
 from app.services.pim_import_service import PimImportService
 from app.services.product_service import ProductService
@@ -96,6 +97,10 @@ async def get_hejco_import_service(db: AsyncSession = Depends(get_db)) -> HejcoI
         settings,
         ProductRepository(db),
     )
+
+
+async def get_integration_setting_service(db: AsyncSession = Depends(get_db)) -> IntegrationSettingService:
+    return IntegrationSettingService(db, get_settings())
 
 
 async def get_current_user(

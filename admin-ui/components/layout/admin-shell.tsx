@@ -29,6 +29,7 @@ export function AdminShell({
             <Link href="/admin/quotes">Quotes</Link>
             <Link href="/admin/intelligence">Intelligence</Link>
             <Link href="/admin/sync">Sync</Link>
+            <Link href="/admin/settings/integrations">Integrations</Link>
           </nav>
           <Badge variant={session.user?.role === "admin" ? "success" : "info"}>{session.user?.role ?? "guest"}</Badge>
           <span className="text-sm text-slate-500">{session.user?.email ?? "Unauthenticated"}</span>

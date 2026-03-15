@@ -12,6 +12,7 @@ export function InfiniteScroll({
   onLoadMore: () => void;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
+  const inFlightRef = useRef(false);
 
   useEffect(() => {
     const node = ref.current;
@@ -21,8 +22,14 @@ export function InfiniteScroll({
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
+        const inView = Boolean(entries[0]?.isIntersecting);
+        const hasMore = !disabled;
+        if (inView && hasMore && !loading && !inFlightRef.current) {
+          inFlightRef.current = true;
           onLoadMore();
+          window.setTimeout(() => {
+            inFlightRef.current = false;
+          }, 300);
         }
       },
       { rootMargin: "320px 0px" }

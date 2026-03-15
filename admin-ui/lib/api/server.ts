@@ -17,7 +17,7 @@ import type {
   PublicProduct
 } from "@/lib/types/products";
 import type { QuoteRequest } from "@/lib/types/quotes";
-import type { PimImportRun, PimSource } from "@/lib/types/pim";
+import type { HejcoIntegrationSetting, PimImportRun, PimSource } from "@/lib/types/pim";
 import type { SystemHealth } from "@/types/intelligence";
 
 export async function fetchAdminProducts(filters: ProductListFilters): Promise<AdminProduct[]> {
@@ -108,6 +108,14 @@ export async function fetchPimImports(): Promise<PimImportRun[]> {
   }
 }
 
+export async function fetchHejcoIntegration(): Promise<HejcoIntegrationSetting | null> {
+  try {
+    return await fetchWithToken<HejcoIntegrationSetting>("/api/v1/admin/integrations/hejco");
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchSystemHealthSummary(): Promise<SystemHealth | null> {
   try {
     return await fetchWithToken<SystemHealth>("/api/v1/admin/intelligence/summary");
@@ -116,9 +124,16 @@ export async function fetchSystemHealthSummary(): Promise<SystemHealth | null> {
   }
 }
 
-export async function fetchPublicProducts(): Promise<CatalogProductList> {
+export async function fetchPublicProducts(
+  query?: Record<string, string | number | undefined>
+): Promise<CatalogProductList> {
   try {
-    return await fetchWithoutToken<CatalogProductList>("/api/v1/products");
+    const search = query
+      ? `?${new URLSearchParams(
+          Object.entries(query).filter(([, value]) => value !== undefined && value !== "").map(([key, value]) => [key, String(value)])
+        ).toString()}`
+      : "";
+    return await fetchWithoutToken<CatalogProductList>(`/api/v1/products${search}`);
   } catch {
     return { products: [], next_cursor: null, filters: { categories: [], colors: [], sizes: [] } };
   }
