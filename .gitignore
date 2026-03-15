@@ -13,3 +13,10 @@ app/db/migrations/__pycache__/
 admin-ui/node_modules/
 admin-ui/.next/
 admin-ui/.next.stale-*/
+node_modules
+frontend/node_modules
+*.tar.gz
+.next
+dist
+build
+.env
