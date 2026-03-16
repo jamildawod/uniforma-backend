@@ -46,6 +46,28 @@ class Settings(BaseSettings):
     ftp_timeout_seconds: int = 30
 
     storage_root: Path = Path("/opt/uniforma/storage")
+    uploads_root: Path = Path("/opt/uniforma/uploads")
+    pim_imports_root: Path = Path("/opt/uniforma/pim_imports")
+
+    hejco_data_root: Path = Path("/opt/uniforma/data")
+    hejco_images_root: Path = Path("/opt/uniforma/data/images")
+    hejco_csv_root: Path = Path("/opt/uniforma/data/csv")
+    hejco_work_root: Path = Path("/opt/uniforma/data/hejco")
+    hejco_csv_file: Path = Path("/opt/uniforma/data/csv/PIMexport_Hejco_sv-SE.csv")
+    hejco_stock_root: Path = Path("/opt/uniforma/data/csv/stock_availability")
+    hejco_ftp_host: str = "partnerftp.hejco.com"
+    hejco_ftp_user: str | None = None
+    hejco_ftp_pass: str | None = None
+    hejco_ftp_timeout_seconds: int = 60
+    hejco_batch_size: int = 250
+    hejco_nightly_sync_enabled: bool = True
+    hejco_nightly_sync_hour: int = 3
+    hejco_nightly_sync_minute: int = 0
+
+    redis_url: str | None = "redis://redis:6379/0"
+    cache_ttl_seconds: int = 600
+    catalog_default_limit: int = 24
+    catalog_max_limit: int = 200
 
     model_config = SettingsConfigDict(
         env_file=".env",

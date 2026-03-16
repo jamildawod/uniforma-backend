@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.core.config import Settings
 from app.core.logging import get_logger
+from app.models.pim_sync_run import PimSyncRun
 from app.models.sync_run import SyncRun
 from app.schemas.sync import PimSyncResponse
 from app.services.ftp_image_service import FtpImageService
@@ -29,7 +30,9 @@ class PimSyncService:
         session = self.ingestion_service.session
         lock_acquired = False
         sync_run = SyncRun(started_at=datetime.now(UTC), status="running")
+        pim_sync_run = PimSyncRun(started_at=datetime.now(UTC), status="running", source_id=None)
         session.add(sync_run)
+        session.add(pim_sync_run)
         await session.flush()
         advisory_lock_key = self._advisory_lock_key()
 
@@ -45,6 +48,8 @@ class PimSyncService:
                 sync_run.finished_at = datetime.now(UTC)
                 sync_run.status = "failed"
                 sync_run.error_message = "Sync already running"
+                pim_sync_run.finished_at = datetime.now(UTC)
+                pim_sync_run.status = "failed"
                 await session.commit()
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
@@ -62,6 +67,14 @@ class PimSyncService:
             sync_run.images_synced = sync_result.images_synced
             sync_run.status = "success"
             sync_run.error_message = None
+            pim_sync_run.finished_at = datetime.now(UTC)
+            pim_sync_run.status = "success"
+            pim_sync_run.records_imported = (
+                sync_result.products_created
+                + sync_result.products_updated
+                + sync_result.variants_created
+                + sync_result.variants_updated
+            )
             await session.commit()
             self.logger.info("PIM sync finished with result: %s", sync_result.model_dump())
             return sync_result
@@ -70,7 +83,10 @@ class PimSyncService:
             sync_run.finished_at = datetime.now(UTC)
             sync_run.status = "failed"
             sync_run.error_message = str(exc)
+            pim_sync_run.finished_at = datetime.now(UTC)
+            pim_sync_run.status = "failed"
             session.add(sync_run)
+            session.add(pim_sync_run)
             await session.commit()
             self.logger.error(
                 "PIM sync integrity error",
@@ -85,7 +101,10 @@ class PimSyncService:
             sync_run.finished_at = datetime.now(UTC)
             sync_run.status = "failed"
             sync_run.error_message = str(exc)
+            pim_sync_run.finished_at = datetime.now(UTC)
+            pim_sync_run.status = "failed"
             session.add(sync_run)
+            session.add(pim_sync_run)
             await session.commit()
             self.logger.error(
                 "PIM sync failed",

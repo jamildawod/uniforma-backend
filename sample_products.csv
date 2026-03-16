@@ -1,0 +1,4 @@
+external_id,name,description,brand,category,sku,ean,size,color,price,stock_quantity,images,material
+sample-hoodie,Test Hoodie,Comfortable branded hoodie,Uniforma Imports,Workwear,TEST-HOODIE-M,7350000001011,M,Navy,499,12,/app/sample-product.svg,Cotton
+sample-hoodie,Test Hoodie,Comfortable branded hoodie,Uniforma Imports,Workwear,TEST-HOODIE-L,7350000001012,L,Navy,499,7,/app/sample-product.svg,Cotton
+sample-cap,Test Cap,Promotional cap for events,Uniforma Imports,Accessories,TEST-CAP-ONE,7350000002011,One Size,Black,129,30,/app/sample-cap.svg,Twill

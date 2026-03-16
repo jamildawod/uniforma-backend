@@ -1,20 +1,26 @@
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ValidationError
 
 from app.api.router import router as api_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
 from app.db.session import dispose_engine, get_session_factory
+from app.repositories.pim_repository import PimRepository
 from app.repositories.product_repository import ProductRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth import UserCreate
-from app.services.ftp_image_service import FtpImageService
-from app.services.pim_ingestion_service import PimIngestionService
-from app.services.pim_sync_service import PimSyncService
+from app.services.category_tree_service import CategoryTreeService
+from app.services.hejco_import_service import HejcoImportService
+from app.services.integration_setting_service import IntegrationSettingService
+from app.services.pim_downloader import PimDownloader
+from app.services.pim_import_service import PimImportService
 from app.services.user_service import UserService
 
 configure_logging()
@@ -51,6 +57,12 @@ async def _bootstrap_default_admin() -> None:
             await session.refresh(user)
 
 
+async def _bootstrap_category_tree() -> None:
+    session_factory = get_session_factory()
+    async with session_factory() as session:
+        await CategoryTreeService(session).ensure_default_tree()
+
+
 def _build_scheduler() -> AsyncIOScheduler:
     settings = get_settings()
     scheduler = AsyncIOScheduler(timezone="UTC")
@@ -58,13 +70,29 @@ def _build_scheduler() -> AsyncIOScheduler:
     async def scheduled_sync() -> None:
         session_factory = get_session_factory()
         async with session_factory() as session:
-            product_repository = ProductRepository(session)
-            sync_service = PimSyncService(
-                PimIngestionService(session, product_repository, settings),
-                FtpImageService(session, product_repository, settings),
+            import_service = PimImportService(
+                session,
                 settings,
+                ProductRepository(session),
+                PimRepository(session),
+                PimDownloader(settings),
             )
-            await sync_service.run_sync()
+            await import_service.run_active_imports()
+
+    async def scheduled_hejco_sync() -> None:
+        session_factory = get_session_factory()
+        async with session_factory() as session:
+            config = await IntegrationSettingService(session, settings).resolve_hejco_config()
+            if not config.sync_enabled:
+                return
+            if datetime.now(UTC).hour != config.sync_hour:
+                return
+            hejco_service = HejcoImportService(
+                session,
+                settings,
+                ProductRepository(session),
+            )
+            await hejco_service.run_full_sync()
 
     if settings.pim_sync_enabled:
         scheduler.add_job(
@@ -73,12 +101,20 @@ def _build_scheduler() -> AsyncIOScheduler:
             id="pim-daily-sync",
             replace_existing=True,
         )
+    if settings.hejco_nightly_sync_enabled:
+        scheduler.add_job(
+            scheduled_hejco_sync,
+            CronTrigger(hour="*", minute=settings.hejco_nightly_sync_minute),
+            id="hejco-nightly-sync",
+            replace_existing=True,
+        )
     return scheduler
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await _bootstrap_default_admin()
+    await _bootstrap_category_tree()
     scheduler = _build_scheduler()
     scheduler.start()
     app.state.scheduler = scheduler
@@ -95,4 +131,23 @@ app = FastAPI(
     debug=settings.app_debug,
     lifespan=lifespan,
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://uniforma.livosys.se",
+        "https://admin.uniforma.livosys.se",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+settings.pim_imports_root.mkdir(parents=True, exist_ok=True)
+settings.uploads_root.mkdir(parents=True, exist_ok=True)
+settings.uploads_root.joinpath("products").mkdir(parents=True, exist_ok=True)
+settings.hejco_images_root.mkdir(parents=True, exist_ok=True)
+settings.hejco_csv_root.mkdir(parents=True, exist_ok=True)
+settings.hejco_work_root.mkdir(parents=True, exist_ok=True)
+settings.hejco_stock_root.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=settings.uploads_root), name="uploads")
+app.mount("/images/products", StaticFiles(directory=settings.hejco_images_root), name="hejco-product-images")
 app.include_router(api_router)

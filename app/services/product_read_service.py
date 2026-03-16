@@ -13,6 +13,7 @@ from app.schemas.product import (
     AdminImageCreateRequest,
     AdminProductRead,
     AdminOverridePatchRequest,
+    ProductImageRead,
     ProductRead,
     ProductVariantRead,
 )
@@ -20,7 +21,6 @@ from app.schemas.product import (
 ALLOWED_OVERRIDE_FIELDS = {
     "name",
     "description",
-    "brand",
 }
 
 
@@ -39,18 +39,29 @@ class ProductReadService:
         override_map = await self.admin_override_repository.list_by_product_ids([product.id for product in products])
         return [self._merge_product(product, override_map.get(product.id, [])) for product in products]
 
-    async def get_public_product(self, slug: str) -> ProductRead | None:
-        product = await self.product_repository.get_product_by_slug(slug)
-        if product is None:
+    async def search_public_products(self, query: str, limit: int = 50) -> list[ProductRead]:
+        products = await self.product_repository.search_products(query=query, limit=limit)
+        override_map = await self.admin_override_repository.list_by_product_ids([product.id for product in products])
+        return [self._merge_product(product, override_map.get(product.id, [])) for product in products]
+
+    async def get_public_product(self, identifier: str) -> ProductRead | None:
+        product = await self.product_repository.get_product_by_identifier(identifier)
+        if product is None or product.deleted_at is not None or self._status_value(product) != "active":
             return None
         overrides = await self.admin_override_repository.list_by_product_ids([product.id])
         return self._merge_product(product, overrides.get(product.id, []))
 
-    async def get_public_variants(self, slug: str) -> list[ProductVariantRead] | None:
-        product = await self.product_repository.get_product_by_slug(slug)
-        if product is None:
+    async def get_public_variants(self, identifier: str) -> list[ProductVariantRead] | None:
+        product = await self.product_repository.get_product_by_identifier(identifier)
+        if product is None or product.deleted_at is not None or self._status_value(product) != "active":
             return None
         return [ProductVariantRead.model_validate(variant) for variant in product.variants if variant.is_active]
+
+    async def get_public_images(self, identifier: str) -> list[ProductImageRead] | None:
+        product = await self.product_repository.get_product_by_identifier(identifier)
+        if product is None or product.deleted_at is not None or self._status_value(product) != "active":
+            return None
+        return [ProductImageRead.model_validate(image) for image in sorted(product.images, key=lambda image: (image.position, image.id))]
 
     async def list_admin_products(self, limit: int = 50, offset: int = 0) -> list[AdminProductRead]:
         products = await self.product_repository.list_products(limit=limit, offset=offset)
@@ -76,11 +87,6 @@ class ProductReadService:
 
         for field_name, override_value in payload.overrides.items():
             if field_name not in ALLOWED_OVERRIDE_FIELDS:
-                self.logger.warning(
-                    "Rejected disallowed override field '%s' for product %s",
-                    field_name,
-                    product_id,
-                )
                 continue
             override = await self.admin_override_repository.get_by_product_and_field(product_id, field_name)
             if override is None:
@@ -110,39 +116,60 @@ class ProductReadService:
         image = ProductImage(
             product_id=product_id,
             variant_id=payload.variant_id,
-            external_path=payload.external_path,
-            local_path=payload.local_path,
+            external_path=payload.url,
+            url=payload.url,
+            local_path=payload.url if payload.url.startswith("/uploads/") else None,
             is_primary=payload.is_primary,
-            sort_order=payload.sort_order,
+            sort_order=payload.position,
+            position=payload.position,
         )
         try:
             await self.product_repository.add_image(image)
         except IntegrityError as exc:
-            session = self.product_repository.session
-            await session.rollback()
-            self.logger.warning(
-                "Rejected duplicate product image for external_path '%s'",
-                payload.external_path,
-                extra={
-                    "event": "admin_product_image_integrity_error",
-                    "product_id": str(product_id),
-                    "external_path": payload.external_path,
-                    "error": str(exc),
-                },
-            )
+            await self.product_repository.session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Image with this external_path already exists.",
+                detail="Image with this url already exists.",
             ) from exc
+
         refreshed = await self.product_repository.get_product_by_id(product_id)
         override_map = await self.admin_override_repository.list_by_product_ids([product_id])
         return self._merge_admin_product(refreshed, override_map.get(product_id, []))
 
     def _merge_product(self, product: Product, overrides: list[AdminOverride]) -> ProductRead:
-        merged = ProductRead.model_validate(product).model_dump()
+        merged = ProductRead.model_validate(
+            {
+                "id": product.id,
+                "external_id": product.external_id,
+                "name": product.name,
+                "slug": product.slug,
+                "description": product.description,
+                "status": product.status.value if hasattr(product.status, "value") else product.status,
+                "brand_id": product.brand_id,
+                "brand": product.brand_rel,
+                "category_id": product.category_id,
+                "category": product.category,
+                "image_url": self._resolve_image_url(product),
+                "is_active": product.is_active,
+                "deleted_at": product.deleted_at,
+                "last_seen_at": product.last_seen_at,
+                "created_at": product.created_at,
+                "updated_at": product.updated_at,
+                "images": [ProductImageRead.model_validate(image) for image in sorted(product.images, key=lambda item: (item.position, item.id))],
+                "variants": [ProductVariantRead.model_validate(variant) for variant in product.variants if variant.deleted_at is None],
+                "attributes": [
+                    {
+                        "attribute_id": value.attribute_id,
+                        "value": value.value,
+                        "attribute": value.attribute,
+                    }
+                    for value in product.attribute_values
+                ],
+            }
+        ).model_dump()
         applied_overrides = self._filter_overrides(overrides)
         for field_name, override_value in applied_overrides.items():
-            if field_name in merged:
+            if field_name in {"name", "description"}:
                 merged[field_name] = override_value
         return ProductRead.model_validate(merged)
 
@@ -155,14 +182,18 @@ class ProductReadService:
         self,
         overrides: list[AdminOverride],
     ) -> dict[str, str | int | float | bool | list | dict | None]:
-        filtered: dict[str, str | int | float | bool | list | dict | None] = {}
-        for override in overrides:
-            if override.field_name not in ALLOWED_OVERRIDE_FIELDS:
-                self.logger.warning(
-                    "Ignored disallowed override field '%s' for product %s",
-                    override.field_name,
-                    override.product_id,
-                )
-                continue
-            filtered[override.field_name] = override.override_value
-        return filtered
+        return {
+            override.field_name: override.override_value
+            for override in overrides
+            if override.field_name in ALLOWED_OVERRIDE_FIELDS
+        }
+
+    def _resolve_image_url(self, product: Product) -> str | None:
+        ordered_images = sorted(product.images, key=lambda image: (not image.is_primary, image.position, image.id))
+        if not ordered_images:
+            return None
+        image = ordered_images[0]
+        return image.url or image.local_path or image.external_path
+
+    def _status_value(self, product: Product) -> str:
+        return product.status.value if hasattr(product.status, "value") else str(product.status)

@@ -9,5 +9,9 @@ if [ ! -d /opt/uniforma/data ]; then
   mkdir -p /opt/uniforma/data
 fi
 
+if [ ! -d /opt/uniforma/uploads ]; then
+  mkdir -p /opt/uniforma/uploads
+fi
+
 alembic upgrade head
 exec uvicorn app.main:app --host 0.0.0.0 --port 8000

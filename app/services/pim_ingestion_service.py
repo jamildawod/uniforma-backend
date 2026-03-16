@@ -14,7 +14,7 @@ from app.core.config import Settings
 from app.core.logging import get_logger
 from app.core.text import slugify
 from app.models.category import Category
-from app.models.product import Product
+from app.models.product import Product, ProductStatus
 from app.models.product_image import ProductImage
 from app.models.product_variant import ProductVariant
 from app.repositories.product_repository import ProductRepository
@@ -260,6 +260,7 @@ class PimIngestionService:
                     description=payload.description,
                     brand=payload.brand,
                     category_id=category.id if category else None,
+                    status=ProductStatus.active if payload.is_active else ProductStatus.draft,
                     is_active=payload.is_active,
                     last_seen_at=run_seen_at,
                     deleted_at=None,
@@ -281,6 +282,7 @@ class PimIngestionService:
                         "description": payload.description,
                         "brand": payload.brand,
                         "category_id": category.id if category else None,
+                        "status": ProductStatus.active if payload.is_active else ProductStatus.draft,
                         "is_active": payload.is_active,
                         "last_seen_at": run_seen_at,
                         "deleted_at": None,
@@ -358,9 +360,11 @@ class PimIngestionService:
                         product_id=product.id,
                         variant_id=variant.id,
                         external_path=image_path,
+                        url=image_path,
                         local_path=None,
                         is_primary=image_index == 0 and index == 0,
                         sort_order=image_index,
+                        position=image_index,
                     )
                     await self.product_repository.add_image(image)
                     existing_images[image_path] = image

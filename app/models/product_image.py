@@ -1,6 +1,7 @@
 import uuid
+from datetime import datetime
 
-from sqlalchemy import Boolean, ForeignKey, Index, Integer, String
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -29,9 +30,16 @@ class ProductImage(Base):
         unique=True,
         index=True,
     )
+    url: Mapped[str] = mapped_column(String(1024), nullable=False, server_default="")
     local_path: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     is_primary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    position: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
 
     product: Mapped["Product"] = relationship(back_populates="images")
     variant: Mapped["ProductVariant | None"] = relationship(back_populates="images")
