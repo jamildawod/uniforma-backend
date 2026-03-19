@@ -19,7 +19,7 @@ export function Header() {
           <img
             src="/UNIFORMA_LIGGANDE_SVART.png"
             alt="Uniforma"
-            className="h-12 md:h-14 w-auto object-contain"
+            className="h-12 md:h-16 lg:h-20 w-auto object-contain"
           />
         </Link>
 
