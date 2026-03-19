@@ -148,8 +148,8 @@ export default function KontaktPage() {
             <a href="tel:+46123456789" className="mt-2 block hover:text-stone-900">
               +46 12 345 67 89
             </a>
-            <a href="mailto:kontakt@uniforma.se" className="mt-1 block hover:text-stone-900">
-              kontakt@uniforma.se
+            <a href="mailto:info@uniforma.se" className="mt-1 block hover:text-stone-900">
+              info@uniforma.se
             </a>
           </div>
           <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
