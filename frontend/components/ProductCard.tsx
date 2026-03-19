@@ -142,38 +142,33 @@ export function ProductCard({ product }: { product: StoreProduct }) {
   return (
     <Link
       href={`/product/${product.slug}`}
-      className="group bg-white border border-gray-200 rounded-xl shadow-sm p-4 hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between"
+      className="group bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-all duration-200 flex flex-col text-center"
     >
-      {/* TITLE */}
-      <div>
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">
-          {safeCategoryName}
-        </p>
-        <h3 className="text-sm font-semibold text-gray-800 mb-2 line-clamp-2 leading-snug">
-          {safeName}
-        </h3>
-        <div className="h-[2px] bg-blue-500 w-full mb-4" />
+      {/* IMAGE */}
+      <div className="relative aspect-square mb-2 bg-[#f5f5f5]">
+        <Image
+          src={imgSrc}
+          alt={safeName}
+          fill
+          unoptimized
+          className="object-contain p-2"
+          sizes="200px"
+          loading="lazy"
+          onError={() => setImgSrc("/placeholder.jpg")}
+        />
       </div>
 
-      {/* IMAGE */}
-      <div className="flex justify-center mb-4">
-        <div className="relative w-40 h-32 bg-[#f5f5f5] rounded-[50%] overflow-hidden">
-          <Image
-            src={imgSrc}
-            alt={safeName}
-            fill
-            unoptimized
-            className="object-contain"
-            sizes="160px"
-            loading="lazy"
-            onError={() => setImgSrc("/placeholder.jpg")}
-          />
-        </div>
-      </div>
+      {/* TEXT */}
+      <p className="text-[10px] uppercase text-gray-400 mb-0.5">
+        {safeCategoryName}
+      </p>
+      <h3 className="text-sm font-medium text-gray-900 line-clamp-2 leading-snug mb-3">
+        {safeName}
+      </h3>
 
       {/* BUTTON */}
-      <div className="flex justify-center mt-auto">
-        <span className="bg-blue-500 text-white text-sm px-4 py-2 rounded hover:bg-blue-600 transition">
+      <div className="mt-auto flex justify-center">
+        <span className="bg-blue-500 text-white text-xs px-3 py-1.5 rounded-md hover:bg-blue-600 transition">
           Läs mer
         </span>
       </div>

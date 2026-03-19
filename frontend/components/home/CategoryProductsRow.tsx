@@ -47,23 +47,21 @@ export function CategoryProductsRow({ category }: { category: Category }) {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-6">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col gap-4 animate-pulse"
+              className="bg-white border border-gray-200 rounded-lg p-3 flex flex-col gap-2 animate-pulse"
             >
-              <div className="h-4 bg-gray-200 rounded w-3/4" />
-              <div className="h-[2px] bg-gray-200 w-full" />
-              <div className="flex justify-center">
-                <div className="w-40 h-32 bg-gray-200 rounded-[50%]" />
-              </div>
-              <div className="h-8 bg-gray-200 rounded w-24 mx-auto" />
+              <div className="aspect-square bg-gray-200 rounded" />
+              <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto" />
+              <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto" />
+              <div className="h-6 bg-gray-200 rounded w-16 mx-auto" />
             </div>
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-6">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
