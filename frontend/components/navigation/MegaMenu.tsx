@@ -26,9 +26,9 @@ const NAV_LINKS = [
 ];
 
 export default function MegaMenu({
-  categories = [],
+  categories,
 }: {
-  categories?: Category[];
+  categories?: Category[] | null;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -43,8 +43,9 @@ export default function MegaMenu({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
-  const items = categories.length > 0 ? categories : STATIC_CATEGORIES;
-  const allLinks = NAV_LINKS;
+  const safeCategories = Array.isArray(categories) ? categories : [];
+  const items = safeCategories.length > 0 ? safeCategories : STATIC_CATEGORIES;
+  const allLinks = Array.isArray(NAV_LINKS) ? NAV_LINKS : [];
 
   return (
     <div className="w-full border-t border-b border-gray-200 bg-[#f7f7f7]">
@@ -69,14 +70,14 @@ export default function MegaMenu({
                   Produktkategorier
                 </p>
                 <div className="grid grid-cols-3 gap-2">
-                  {items.map((cat) => (
+                  {(items ?? []).map((cat) => (
                     <Link
-                      key={cat.id}
-                      href={`/shop?category=${encodeURIComponent(cat.slug ?? cat.name)}`}
+                      key={cat?.id}
+                      href={`/shop?category=${encodeURIComponent(cat?.slug ?? cat?.name ?? "")}`}
                       onClick={() => setOpen(false)}
                       className="rounded border border-stone-100 px-4 py-2.5 text-sm font-medium text-stone-800 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                     >
-                      {cat.name}
+                      {cat?.name}
                     </Link>
                   ))}
                 </div>
@@ -97,14 +98,11 @@ export default function MegaMenu({
         {/* NAV LINKS AS STRIP ITEMS */}
         {allLinks.map((link, index) => (
           <a
-            key={link.href}
-            href={link.href}
-            className={[
-              "flex items-center h-[50px] px-6 text-sm font-medium text-gray-700 whitespace-nowrap transition hover:text-black hover:bg-gray-100",
-              index < allLinks.length - 1 ? "border-r border-gray-200" : "",
-            ].join(" ")}
+            key={link?.href ?? index}
+            href={link?.href ?? "/"}
+            className={`flex items-center h-[50px] px-6 text-sm font-medium text-gray-700 whitespace-nowrap transition hover:text-black hover:bg-gray-100${index < allLinks.length - 1 ? " border-r border-gray-200" : ""}`}
           >
-            {link.label}
+            {link?.label}
           </a>
         ))}
 
