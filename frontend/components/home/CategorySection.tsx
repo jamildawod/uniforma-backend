@@ -82,7 +82,7 @@ function CategoryCard({
   return (
     <Link
       href={`/shop?category=${encodeURIComponent(slug)}`}
-      className="relative h-[140px] rounded-xl overflow-hidden group block"
+      className="relative h-[260px] rounded-2xl overflow-hidden group block"
     >
       {effectiveImageUrl ? (
         <img
@@ -96,7 +96,7 @@ function CategoryCard({
       )}
       <div className="absolute inset-0 bg-black/40 group-hover:bg-black/55 transition-colors duration-200" />
       <div className="absolute inset-0 flex items-center justify-center">
-        <h2 className="text-white text-sm font-semibold drop-shadow-md text-center px-2">
+        <h2 className="text-white text-2xl font-semibold drop-shadow-md text-center px-4">
           {category.name}
         </h2>
       </div>
@@ -162,27 +162,34 @@ export function CategorySection({
   const showEmptyState = !loading && !hasCategories;
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-8">
-      <div className="mb-4 flex items-end justify-between">
-        <h2 className="text-lg font-semibold text-stone-950">{title}</h2>
+    <section className="mx-auto max-w-6xl px-4 py-12 md:py-16">
+      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.5em] text-stone-400">
+            Utforska
+          </p>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight text-stone-950">
+            {title}
+          </h2>
+        </div>
         <Link
           href={href}
-          className="text-sm font-semibold text-stone-500 transition hover:text-stone-950"
+          className="inline-flex items-center gap-1 text-sm font-semibold text-stone-500 transition hover:text-stone-950"
         >
           Visa alla
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {showEmptyState ? (
-          <div className="col-span-full rounded-xl border border-gray-200 bg-stone-50 px-6 py-8 text-center text-sm font-semibold text-stone-600">
+          <div className="col-span-full rounded-xl border border-gray-200 bg-stone-50 px-6 py-12 text-center text-sm font-semibold text-stone-600 shadow-sm">
             Inga kategorier hittades
           </div>
         ) : showPlaceholder ? (
           Array.from({ length: 6 }).map((_, index) => (
             <div
               key={`placeholder-${index}`}
-              className="h-[140px] rounded-xl bg-stone-200 animate-pulse"
+              className="h-[260px] rounded-2xl bg-stone-200 animate-pulse"
             />
           ))
         ) : (
